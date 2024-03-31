@@ -1,11 +1,11 @@
-import { Button, Text, View, Image } from 'react-native';
+import { Button, Text, View, Image, SafeAreaView } from 'react-native';
 import React from 'react';
 
 const Welcome = ({ navigation }) => {
 
     return (
 
-        <View style={{ flex: 1, backgroundColor: '#FEFADF' }}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#FEFADF' }}>
 
             <View>
 
@@ -15,7 +15,7 @@ const Welcome = ({ navigation }) => {
                         height: 360,
                         width: 360,
                         position: "absolute",
-                        top: 150,
+                        top: 80,
                     }}
                 />
 
@@ -24,7 +24,7 @@ const Welcome = ({ navigation }) => {
             <View style={{
                 paddingHorizontal: 22,
                 position: "absolute",
-                top: 500,
+                top: 450,
                 width: "100%",
                 justifyContent: "center",
                 alignItems: "center",
@@ -34,6 +34,7 @@ const Welcome = ({ navigation }) => {
                     fontWeight: 600,
                     color: "#012636",
                     textAlign: "center",
+                    paddingBottom: 50
                 }}
                 >
                     Welcome to our app!
@@ -41,10 +42,9 @@ const Welcome = ({ navigation }) => {
 
                 <View>
                     <Button
-                        title="Get Started"
+                        title="Get started"
                         onPress={() => navigation.navigate("Home")}
                         style={{
-                            marginTop: 22,
                             width: "100%",
                         }}
                     />
@@ -52,7 +52,7 @@ const Welcome = ({ navigation }) => {
 
             </View>
 
-        </View>
+        </SafeAreaView>
     );
 }
 
