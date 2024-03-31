@@ -16,6 +16,7 @@ const Welcome = ({ navigation }) => {
                         width: 360,
                         position: "absolute",
                         top: 80,
+                        marginLeft: 25,
                     }}
                 />
 
