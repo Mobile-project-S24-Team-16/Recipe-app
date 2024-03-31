@@ -2,7 +2,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Welcome, Home } from './screens';
 import { NavigationContainer } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 
 
 const Tab = createBottomTabNavigator();
@@ -49,12 +49,10 @@ const HomeStack = () => {
           // mahdollisesti väliaikaisesti pois käytöstä
           // headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Icon name="home" color={color} size={size} />
+            <MaterialIcons name="home" color={color} size={size} />
           )
         }}
       />
-
-      {/* Add other tabs here */}
 
     </Tab.Navigator>
 
