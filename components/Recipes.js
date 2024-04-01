@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ActivityIndicator, Image, ScrollView, Pressable } from "react-native";
 import React, { useEffect, useState } from "react";
-import { mealData } from "./constants";
+//import { mealData } from "./constants";
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Loading from "./loading";
 
@@ -8,8 +8,8 @@ import Loading from "./loading";
 const Recipes = ({ categories, meals }) => {
     const [isLoading, setIsLoading] = useState(true);
 
+    // Simulate loading
     useEffect(() => {
-        // Simulate data fetching (replace with your actual logic)
         setTimeout(() => {
 
             setIsLoading(false);
@@ -22,9 +22,9 @@ const Recipes = ({ categories, meals }) => {
             {isLoading ? (
                 <View style={styles.activityIndicatorWrapper}>
                     {categories.length === 0 || meals.length === 0 ? (
-                        <Loading />
+                        <Loading size="large" /> // Loading spinner
                     ) : (
-                        <ActivityIndicator color={'black'} size={'large'} />
+                        <Text>Loading recipes...</Text>// Loading recipes message
                     )}
                 </View>
             ) : (
@@ -43,7 +43,7 @@ const Recipes = ({ categories, meals }) => {
 // Recipe card
 const RecipeCard = ({ item, index }) => {
 
-    // Check if index is even
+    // Check if index is even for styling
     let isEven = index % 2 === 0;
 
     return (
@@ -111,10 +111,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: 'bold',
         marginBottom: 5,
-    },
-
-    recipeDescription: {
-        fontSize: 12,
     },
 });
 
