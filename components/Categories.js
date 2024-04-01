@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet } from "react-native";
 import React from "react";
-import { categoryData } from "./constants";
+//import { categoryData } from "./constants";
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 const Categories = ({categories, activeCategory, handleChangeCategory }) => {
