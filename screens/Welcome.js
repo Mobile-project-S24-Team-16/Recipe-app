@@ -5,12 +5,10 @@ const Welcome = ({ navigation }) => {
 
     return (
 
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#FEFADF' }}>
-
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#FFC786' }}>
             <View>
-
                 <Image
-                    source={require("../assets/images/foodRecipeAppLogo.jpeg")}
+                    source={require("../assets/images/foodRecipeAppLogo.png")}
                     style={{
                         height: 360,
                         width: 360,
@@ -19,9 +17,7 @@ const Welcome = ({ navigation }) => {
                         marginLeft: 25,
                     }}
                 />
-
             </View>
-
             <View style={{
                 paddingHorizontal: 22,
                 position: "absolute",
@@ -40,7 +36,6 @@ const Welcome = ({ navigation }) => {
                 >
                     Welcome to our app!
                 </Text>
-
                 <View>
                     <Button
                         title="Get started"
@@ -50,9 +45,7 @@ const Welcome = ({ navigation }) => {
                         }}
                     />
                 </View>
-
             </View>
-
         </SafeAreaView>
     );
 }
