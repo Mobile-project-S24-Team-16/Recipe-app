@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet, ActivityIndicator, Image, ScrollView, Pressable } from "react-native";
+import { View, Text, StyleSheet, ActivityIndicator, Image, ScrollView, Pressable, Dimensions } from "react-native";
 import React, { useEffect, useState } from "react";
 //import { mealData } from "./constants";
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Loading from "./loading";
 
+// Add responsive design
+const screenWidth = Dimensions.get('window').width;
 
 const Recipes = ({ categories, meals }) => {
     const [isLoading, setIsLoading] = useState(true);
@@ -91,7 +93,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         marginVertical: 5,
-        width: '48%',
+        width: screenWidth / 2 - 20,
     },
 
     cardsContainer: {

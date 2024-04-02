@@ -1,7 +1,10 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, Dimensions } from "react-native";
 import React from "react";
 //import { categoryData } from "./constants";
 import Animated, { FadeInDown } from 'react-native-reanimated';
+
+// Add responsive design
+const screenWidth = Dimensions.get('window').width;
 
 const Categories = ({categories, activeCategory, handleChangeCategory }) => {
     return (
@@ -45,6 +48,7 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         alignItems: "center",
         justifyContent: "center",
+        minWidth: screenWidth / 3 - 20,
     },
 
     categoryItemView: {
