@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 
-const LoginInformationScreen = () => {
+const LoginInformationScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
@@ -19,6 +19,9 @@ const LoginInformationScreen = () => {
           secureTextEntry={true}
         />
       </View>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Home")}>
+                <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
       <TouchableOpacity>
         <Text style={styles.forgotPasswordText}>Forgot your password? Reset it by clicking this.</Text>
       </TouchableOpacity>
@@ -52,6 +55,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     width: '100%',
+  },
+  button: {
+    width: '80%',
+    marginVertical: 10,
+    paddingVertical: 15,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   forgotPasswordText: {
     marginTop: 10,

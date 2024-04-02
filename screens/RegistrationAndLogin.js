@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 
-const RegistrationAndLogin = () => {
+const RegistrationAndLogin = ({ navigation }) => {
     return (
         <View style={styles.container}>
             <View style={styles.logoContainer}>
@@ -14,13 +14,13 @@ const RegistrationAndLogin = () => {
                     }}
                 />
             </View>
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Login")}>
                 <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Registration")}>
                 <Text style={styles.buttonText}>Signup</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.skipButton}>
+            <TouchableOpacity style={styles.skipButton} onPress={() => navigation.navigate("Home")}>
                 <Text style={styles.skipButtonText}>Skip and continue to home</Text>
             </TouchableOpacity>
         </View>

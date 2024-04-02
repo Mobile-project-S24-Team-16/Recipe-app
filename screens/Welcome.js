@@ -44,7 +44,7 @@ const Welcome = ({ navigation }) => {
                 <View>
                     <Button
                         title="Get started"
-                        onPress={() => navigation.navigate("Home")}
+                        onPress={() => navigation.navigate("RegistrationAndLogin")}
                         style={{
                             width: "100%",
                         }}

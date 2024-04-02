@@ -1,7 +1,15 @@
 import React from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
 
-const Registration = () => {
+const Registration = ({ navigation }) => {
+
+  const [nickname, setNickname] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Register</Text>
@@ -36,7 +44,7 @@ const Registration = () => {
           secureTextEntry={true}
         />
       </View>
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Login")}>
         <Text style={styles.buttonText}>Register account</Text>
       </TouchableOpacity>
     </View>
