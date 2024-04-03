@@ -43,6 +43,7 @@ const styles = StyleSheet.create({
     categoryMain: {
         backgroundColor: "#FFC786",
     },
+    
     categoryItem: {
         backgroundColor: "#FFC786",
         padding: 10,
