@@ -8,7 +8,7 @@ const screenWidth = Dimensions.get('window').width;
 
 const Categories = ({categories, activeCategory, handleChangeCategory }) => {
     return (
-        <Animated.View entering={FadeInDown.duration(500).springify()}>
+        <Animated.View entering={FadeInDown.duration(500).springify()} style={styles.categoryMain}>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -40,8 +40,12 @@ const Categories = ({categories, activeCategory, handleChangeCategory }) => {
 };
 
 const styles = StyleSheet.create({
+    categoryMain: {
+        backgroundColor: "#FFC786",
+    },
+    
     categoryItem: {
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "#FFC786",
         padding: 10,
         marginRight: 10,
         marginTop: 15,
@@ -52,7 +56,7 @@ const styles = StyleSheet.create({
     },
 
     categoryItemView: {
-        backgroundColor: "#ffe1adff",
+        backgroundColor: "#b08446ff",
         borderRadius: 100,
         padding: 6,
     },
@@ -69,7 +73,7 @@ const styles = StyleSheet.create({
     },
 
     activeCategoryItem: {
-        backgroundColor: "#ffd67e", // Active category style
+        backgroundColor: "#fff9ed", // Active category style
         borderRadius: 25,
     },
 });

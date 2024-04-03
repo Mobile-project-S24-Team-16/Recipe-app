@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
         marginHorizontal: 4,
         marginVertical: 3,
+        backgroundColor: '#FFC786',
     },
 
     recipesText: {
