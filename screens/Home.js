@@ -1,20 +1,26 @@
-import { View, Text, StyleSheet, ScrollView } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, StyleSheet, ScrollView, Button } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { TextInput } from 'react-native-paper';
 import { Entypo } from '@expo/vector-icons';
 import Categories from '../components/Categories';
 import Recipes from '../components/Recipes';
+import SearchBar from '../components/SearchBar';
 import axios from 'axios';
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
+import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Home = () => {
 
+    // Navigation hook
+    const navigation = useNavigation();
     // Active category state
     const [activeCategory, setActiveCategory] = useState('Beef');
-    // Categories state
+    // Categories state (initialized as an empty array)
     const [categories, setCategories] = useState([]);
-    // Recipes state
+    // Recipes state (initialized as an empty array)
     const [meals, setMeals] = useState([]);
+    // Search term state
+    const [search, setSearch] = useState('');
 
     // Get categories and recipes on component mount
     useEffect(() => {
@@ -23,99 +29,119 @@ const Home = () => {
     }, []);
 
     // Handle category change
-    const handleChangeCategory = category => {
+    const handleChangeCategory = (category) => {
         getRecipes(category);
         setActiveCategory(category);
         setMeals([]);
-    }
+    };
 
     // Get categories from API
     const getCategories = async () => {
         try {
             const response = await axios.get('https://www.themealdb.com/api/json/v1/1/categories.php');
-            //console.log('get categories', response.data);
-            if(response && response.data) {
+            if (response && response.data) {
                 setCategories(response.data.categories);
-
+            } else {
+                setCategories([]); // Set to empty array in case of error
             }
-        }catch (error) {
-            console.log('error', error.message);
+        } catch (error) {
+            console.error('error fetching categories', error);
+            setCategories([]); // Set to empty array in case of error
         }
-    }
+    };
 
     // Get recipes from API
-    const getRecipes = async (category="Beef") => {
+    const getRecipes = async (category = "Beef") => {
         try {
             const response = await axios.get(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${category}`);
-            // console.log('get recipes', response.data);
-            if(response && response.data) {
+            if (response && response.data.meals) { // Check for both response.data and meals
                 setMeals(response.data.meals);
-
+            } else {
+                setMeals([]); // Set to empty array if meals are not available
             }
-        }catch (error) {
-            console.log('error', error.message);
+        } catch (error) {
+            console.error('error fetching recipes', error);
+            setMeals([]); // Set to empty array in case of error
         }
-    }
-    
+    };
+
     return (
-        <ScrollView>
-            <View styles={styles.container}>
-                <Text style={{ fontSize: 18, marginBottom: 20, marginTop: 10, alignItems: 'center' }}>Make your own food with these recipes</Text>
-            </View>
-            {/* Search bar */}
-            <View styles={styles.searchBar}>
-                <TextInput
-                    placeholder="Search any recipe"
-                    placeholderTextColor="gray"
-                    style={{
-                        flex: 1,
-                        fontSize: 16,
-                        fontWeight: 'bold',
-                        borderRadius: 10,
-                        backgroundColor: '#fff7d8',
-                        paddingLeft: 35,
-                        position: 'relative',
-                    }}
-                />
-                <Entypo
-                    name="magnifying-glass"
-                    size={24}
-                    color="gray"
-                    style={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 10,
-                    }}
-                />
-            </View>
+        <SafeAreaView style={styles.scrollContent}>
+            <ScrollView style={styles.scrollContent}>
+                <View styles={styles.container}>
+                    <Text style={{ fontSize: 18, marginBottom: 20, marginTop: 10, alignItems: 'center' }}></Text>
+                </View>
 
-            {/* Categories */}
-            <View>
-                { categories.length > 0 && <Categories categories={categories} activeCategory={activeCategory} handleChangeCategory={handleChangeCategory} /> }
-            </View>
+                {/* Search bar */}
+                <View style={styles.searchBarContainer}>
+                    <SearchBar
+                        onSubmitEditing={() => getRecipes(search)} // Pass search term to getRecipes
+                        value={search}
+                        onChangeText={setSearch}
+                    />
+                </View>
 
-            {/* Recipes */}
-            <View>
-                <Recipes meals={meals} categories={categories} />
-            </View>
+                {/* Categories */}
+                <View>
+                    {categories.length > 0 && ( // Only render if categories exist
+                        <Categories
+                            categories={categories}
+                            activeCategory={activeCategory}
+                            handleChangeCategory={handleChangeCategory}
+                        />
+                    )}
+                </View>
 
-        </ScrollView>
-    )
+                {/* Recipes */}
+                <View>
+                    {meals.length === 0 && search !== '' ? (
+                        <Text style={{ textAlign: 'center' }}>Recipe not found!</Text> // Display message if no recipes found
+                    ) : meals.length > 0 ? (
+                        <Recipes meals={meals} categories={categories} />
+                    ) : (
+                        <Text style={{ textAlign: 'center' }}>Loading recipes...</Text>
+                    )}
+                    {meals.length > 0 && ( // Only show button if recipes are displayed
+                        <View style={styles.backButtonContainer}>
+                            <Button style={styles.backButton} title="Back" onPress={() => navigation.navigate('Home')} />
+                        </View>
+                    )}
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    );
 };
 
+
 const styles = StyleSheet.create({
+    scrollContent: {
+        backgroundColor: '#FFC786',
+    },
     container: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#ffdaaf',
         marginTop: 20,
         paddingHorizontal: 40,
     },
-    searchBar: {
-        flexDirection: 'row',
+    searchBarContainer: {
         alignItems: 'center',
-        marginBottom: 20,
+        backgroundColor: '#FFC786',
+        paddingHorizontal: 10,
+    },
+    searchIcon: {
+        marginRight: 10,
+        marginTop: 65,
+        marginLeft: 10,
+    },
+    backButtonContainer: {
+        marginTop: 20,
+        paddingHorizontal: 40,
+    },
+    backButton: {
+        backgroundColor: '#012636',
+        color: '#ffffff',
     },
 });
 
