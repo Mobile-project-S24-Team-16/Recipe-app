@@ -6,7 +6,7 @@ const RegistrationAndLogin = ({ navigation }) => {
         <View style={styles.container}>
             <View style={styles.logoContainer}>
                 <Image
-                    source={require("../assets/images/foodRecipeAppLogo.jpeg")}
+                    source={require("../assets/images/foodRecipeAppLogo.png")}
                     style={{
                         height: 180,
                         width: 180,
