@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
-import { register } from '../components/Auth';
+import { register, logout } from '../components/Auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/Config';
 
@@ -39,58 +39,72 @@ const Registration = ({ navigation }) => {
         setEmail('');
         setPassword('');
         setConfirmPassword('');
-        navigation.navigate('Home');
+        navigation.navigate('Login');
       }
     });
   }
 
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Register</Text>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Nickname:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your nickname"
-          onChangeText={(nickname) => setNickname(nickname.trim())}
-        />
+  if (isLoggedIn) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>You are already logged in</Text>
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Home')}>
+          <Text style={styles.buttonText}>Go to Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={() => logout()}>
+          <Text style={styles.buttonText}>Logout</Text>
+        </TouchableOpacity>
       </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Email:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your email"
-          keyboardType="email-address"
-          onChangeText={(email) => setEmail(email.trim())}
-        />
+    );
+  }
+  else {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Register</Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Nickname:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your nickname"
+            onChangeText={(nickname) => setNickname(nickname.trim())}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            keyboardType="email-address"
+            onChangeText={(email) => setEmail(email.trim())}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Password:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your password"
+            onChangeText={(password) => setPassword(password)}
+            secureTextEntry={true}
+          />
+        </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Confirm Password:</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm your password"
+            onChangeText={(confirmPassword) => setConfirmPassword(confirmPassword)}
+            secureTextEntry={true}
+          />
+        </View>
+        <TouchableOpacity style={styles.button} onPress={handleRegister}>
+          <Text style={styles.buttonText}>Register account</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <Text style={styles.loginText}>Already have an account? Login here!</Text>
+        </TouchableOpacity>
       </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Password:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your password"
-          onChangeText={(password) => setPassword(password)}
-          secureTextEntry={true}
-        />
-      </View>
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Confirm Password:</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm your password"
-          onChangeText={(confirmPassword) => setConfirmPassword(confirmPassword)}
-          secureTextEntry={true}
-        />
-      </View>
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Register account</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-        <Text style={styles.loginText}>Already have an account? Login here!</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  }
 };
 
 const styles = StyleSheet.create({
@@ -135,7 +149,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   loginText: {
-  marginTop: 20,
+    marginTop: 20,
     color: '#007AFF',
     textDecorationLine: 'underline',
   }
