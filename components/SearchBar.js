@@ -7,7 +7,7 @@ const SearchBar = ({ handleSubmit, query, isLoading, setQuery }) => {
       <TextInput
         value={query}
         style={styles.inputSearch}
-        placeholder="Search Recipe"
+        placeholder="Search for recipes..."
         onChangeText={setQuery}
         disabled={isLoading}
       />
