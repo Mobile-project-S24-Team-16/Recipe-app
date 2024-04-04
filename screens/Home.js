@@ -104,6 +104,7 @@ const Home = () => {
 
                 {/* Search bar */}
                 <View style={styles.container}>
+                    <Text style={styles.heading}>Food Wonders</Text>
                     <Text style={styles.title}>Our food recipes</Text>
                     <SearchBar
                         isLoading={isLoading}
@@ -179,6 +180,12 @@ const styles = StyleSheet.create({
     backButton: {
         backgroundColor: '#012636',
         color: '#ffffff',
+    },
+    heading: {
+        fontSize: 30,
+        marginBottom: 10,
+        marginTop: 10,
+        alignItems: 'center',
     },
     title: {
         fontSize: 18,
