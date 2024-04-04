@@ -1,13 +1,17 @@
-import { View, Text, StyleSheet, ScrollView, Button } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Button, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import { TextInput } from 'react-native-paper';
 import { Entypo } from '@expo/vector-icons';
 import Categories from '../components/Categories';
 import Recipes from '../components/Recipes';
 import SearchBar from '../components/SearchBar';
+import RecipeList from '../components/RecipeList';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// API URL from TheMealDB
+const searchApi = 'https://www.themealdb.com/api/json/v1/1/search.php?s=';
 
 const Home = () => {
 
@@ -19,8 +23,14 @@ const Home = () => {
     const [categories, setCategories] = useState([]);
     // Recipes state (initialized as an empty array)
     const [meals, setMeals] = useState([]);
+    // Loading state
+    const [isLoading, setIsLoading] = useState(false);
+    // Search state
+    const [query, setQuery] = useState('');
     // Search term state
     const [search, setSearch] = useState('');
+    // Recipes state
+    const [recipes, setRecipes] = useState([]);
 
     // Get categories and recipes on component mount
     useEffect(() => {
@@ -35,6 +45,26 @@ const Home = () => {
         setMeals([]);
     };
 
+    // Search recipes
+    // useEffect(() => {
+    //     searchRecipes();
+    // }, []);
+
+    // Handle search input
+    const handleSubmit = (event) => {
+        event.preventDefault();
+        searchRecipes();
+    };
+
+    // Search recipes
+    const searchRecipes = async () => {
+        setIsLoading(true);
+        const url = searchApi + query;
+        const res = await fetch(url);
+        const data = await res.json();
+        setRecipes(data.meals);
+        setIsLoading(false);
+    };
     // Get categories from API
     const getCategories = async () => {
         try {
@@ -73,12 +103,19 @@ const Home = () => {
                 </View>
 
                 {/* Search bar */}
-                <View style={styles.searchBarContainer}>
+                <View style={styles.container}>
+                    <Text style={styles.title}>Our food recipes</Text>
                     <SearchBar
-                        onSubmitEditing={() => getRecipes(search)} // Pass search term to getRecipes
-                        value={search}
-                        onChangeText={setSearch}
+                        isLoading={isLoading}
+                        query={query}
+                        setQuery={setQuery}
+                        handleSubmit={handleSubmit}
                     />
+                    {isLoading ? (
+                        <ActivityIndicator size="small" color="#FFBA5A" />
+                    ) : (
+                        <RecipeList recipes={recipes} />
+                    )}
                 </View>
 
                 {/* Categories */}
@@ -94,7 +131,7 @@ const Home = () => {
 
                 {/* Recipes */}
                 <View>
-                    {meals.length === 0 && search !== '' ? (
+                    {meals.length === 0 && query !== '' ? (
                         <Text style={{ textAlign: 'center' }}>Recipe not found!</Text> // Display message if no recipes found
                     ) : meals.length > 0 ? (
                         <Recipes meals={meals} categories={categories} />
@@ -142,6 +179,12 @@ const styles = StyleSheet.create({
     backButton: {
         backgroundColor: '#012636',
         color: '#ffffff',
+    },
+    title: {
+        fontSize: 18,
+        marginBottom: 20,
+        marginTop: 10,
+        alignItems: 'center',
     },
 });
 
