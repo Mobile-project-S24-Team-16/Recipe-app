@@ -1,6 +1,6 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Welcome, Home } from './screens';
+import { Welcome, Home, RegistrationAndLogin, Registration, Login } from './screens';
 import { NavigationContainer } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -22,6 +22,24 @@ export default function App() {
           options={{ headerShown: false }}
         />
 
+        <Stack.Screen
+          name="RegistrationAndLogin"
+          component={RegistrationAndLogin}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Registration"
+          component={Registration}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Login"
+          component={Login}
+          options={{ headerShown: false }}
+        />
+        
         <Stack.Screen
           name="Home"
           component={HomeStack}
