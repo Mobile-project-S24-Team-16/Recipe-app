@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 //import { mealData } from "./constants";
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Loading from "./loading";
+import { useNavigation } from "@react-navigation/native";
 
 // Add responsive design
 const screenWidth = Dimensions.get('window').width;
@@ -10,6 +11,7 @@ const screenWidth = Dimensions.get('window').width;
 const Recipes = ({ categories, meals }) => {
     const [isLoading, setIsLoading] = useState(true);
 
+    const navigation = useNavigation();
     // Simulate loading
     useEffect(() => {
         setTimeout(() => {
@@ -33,7 +35,7 @@ const Recipes = ({ categories, meals }) => {
                 <ScrollView contentContainerStyle={styles.scrollViewContent}>
                     <View style={styles.cardsContainer}>
                         {meals.map((item, index) => (
-                            <RecipeCard key={item.idMeal} item={item} index={index} />
+                            <RecipeCard key={item.idMeal} item={item} index={index} navigation={navigation} />
                         ))}
                     </View>
                 </ScrollView>
@@ -43,7 +45,7 @@ const Recipes = ({ categories, meals }) => {
 };
 
 // Recipe card
-const RecipeCard = ({ item, index }) => {
+const RecipeCard = ({ item, index, navigation }) => {
 
     // Check if index is even for styling
     let isEven = index % 2 === 0;
@@ -51,6 +53,7 @@ const RecipeCard = ({ item, index }) => {
     return (
         <Animated.View entering={FadeInDown.delay(index * 100).duration(600).springify().damping(12)} style={styles.recipeCard}>
             <Pressable style={{ width: '100%', paddingLeft: isEven ? 0 : 8, paddingRight: isEven ? 8 : 0 }}
+                onPress={() => navigation.navigate('RecipeDetail', {...item })}
             >
                 <Image source={{ uri: item.strMealThumb }} style={styles.recipeImage} />
                 <Text style={styles.recipeName}>
