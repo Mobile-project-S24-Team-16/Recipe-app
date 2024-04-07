@@ -6,6 +6,7 @@ import Home from "./Home";
 import ShoppingList from "./ShoppingList";
 import Planner from "./Planner";
 import MyAccount from "./MyAccount";
+import RecipeDetails from "./RecipeDetails";
 
 export {
     Welcome,
@@ -13,6 +14,7 @@ export {
     Registration,
     Login,
     Home,
+    RecipeDetails,
     ShoppingList,
     Planner,
     MyAccount
