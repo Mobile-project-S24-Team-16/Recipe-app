@@ -6,6 +6,7 @@ import Home from "./Home";
 import ShoppingList from "./ShoppingList";
 import Planner from "./Planner";
 import MyAccount from "./MyAccount";
+import Settings from "./Settings";
 
 export {
     Welcome,
@@ -15,5 +16,6 @@ export {
     Home,
     ShoppingList,
     Planner,
-    MyAccount
+    MyAccount,
+    Settings
 }
