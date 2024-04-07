@@ -23,6 +23,9 @@ const RecipeDetails = (props) => {
     // State to store the meal data
     const [meal, setMeal] = useState(null);
 
+    // State to store cooking time
+    const [cookingTime, setCookingTime] = useState(null);
+
     // Loading stage
     const [loading, setLoading] = useState(true);
 
@@ -33,6 +36,86 @@ const RecipeDetails = (props) => {
     useEffect(() => {
         getMealData(item.idMeal);
     }, []);
+
+
+    // Function to extract cooking time from instructions
+    const extractCookingTime = (instructions) => {
+        const regexMinutes = /\b(\d+)\s*(?:minutes?|mins?)\b/gi; // Match minutes or mins
+        const regexHours = /\b(\d+)\s*hours?\b/gi; // Match hours
+        const regexSeconds = /\b(\d+)\s*seconds?\b/gi; // Match seconds
+        const regexNumbers = /\b([1-5]?\d)\b/gi; // Match any numbers between 1 and 60
+
+        let totalMinutes = 0;
+
+        // Extract minutes
+        const matchesMinutes = instructions.matchAll(regexMinutes);
+        for (const match of matchesMinutes) {
+            totalMinutes += parseInt(match[1]);
+        }
+
+        // Extract hours and convert to minutes
+        const matchesHours = instructions.matchAll(regexHours);
+        for (const match of matchesHours) {
+            totalMinutes += parseInt(match[1]) * 60; // Convert hours to minutes
+        }
+
+        // Extract seconds and convert to minutes
+        const matchesSeconds = instructions.matchAll(regexSeconds);
+        for (const match of matchesSeconds) {
+            totalMinutes += Math.ceil(parseInt(match[1]) / 60); // Convert seconds to minutes
+        }
+
+        return totalMinutes;
+    };
+
+    // Function to extract serving size from instructions
+    const extractServings = (instructions) => {
+        const regexServings = /\b(\d+)\s*serving(s?)\b/gi; // Match servings with number capture group
+        const regexNumbers = /\b([1-9]|10)\b/gi; // Match numbers between 1 and 10
+        let totalServings = null;
+    
+        // Extract servings and numbers from instructions
+        const matchesServings = instructions.matchAll(regexServings);
+        for (const match of matchesServings) {
+            totalServings = parseInt(match[1]); // Set captured number as total servings
+        }
+    
+        // If no servings are found, extract numbers between 1 and 10 from instructions
+        if (totalServings === null || isNaN(totalServings)) {
+            const matchesNumbers = instructions.matchAll(regexNumbers);
+            for (const match of matchesNumbers) {
+                totalServings = parseInt(match[0]); // Set matched number as total servings
+            }
+        }
+    
+        return totalServings;
+    };
+
+     // Function to extract calories from instructions
+     const extractServingsAndCalculateCalories = (instructions) => {
+        const regexServings = /\b(\d+)\s*serving(s?)\b/gi;
+        const regexNumbers = /\b([1-9]|10)\b/gi; 
+        let totalServings = null;
+    
+        // Extract servings and numbers from instructions
+        const matchesServings = instructions.matchAll(regexServings);
+        for (const match of matchesServings) {
+            totalServings = parseInt(match[1]); // Set captured number as total servings
+        }
+    
+        // If no servings are found, extract numbers between 1 and 10 from instructions
+        if (totalServings === null || isNaN(totalServings)) {
+            const matchesNumbers = instructions.matchAll(regexNumbers);
+            for (const match of matchesNumbers) {
+                totalServings = parseInt(match[0]); // Set matched number as total servings
+            }
+        }
+    
+        // Calculate total calories based on servings (assuming one serving is 130 calories)
+        const totalCalories = totalServings * 130;
+        
+        return totalCalories;
+    };
 
     // Get meal data details
     const getMealData = async (id) => {
@@ -73,95 +156,98 @@ const RecipeDetails = (props) => {
 
     return (
         <>
-        {/* <StatusBar style="light" /> */}
-        <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ flexGrow: 1, paddingBottom: 30, backgroundColor: '#FFC786' }}
-        >
-            {/* Recipe Image */}
-            <View style={styles.recipeDetailContainer}>
-                <Image source={{ uri: item.strMealThumb }} style={styles.recipeImage}  sharedTransitionTag={item.strMeal}/>
-            </View>
+            {/* <StatusBar style="light" /> */}
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: 30, backgroundColor: '#FFC786' }}
+            >
+                {/* Recipe Image */}
+                <View style={styles.recipeDetailContainer}>
+                    <Image source={{ uri: item.strMealThumb }} style={styles.recipeImage} sharedTransitionTag={item.strMeal} />
+                </View>
 
-            {/* Back button */}
-            <Animated.View entering={FadeIn.delay(200).duration(1000)} style={styles.recipeBackButton}>
-                <TouchableOpacity onPress={() => navigation.navigate("Home")}>
-                    <ChevronLeftIcon name="chevron-left" size={24} strokeWidth={6.5} color="#fff" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.recipeFavourite} onPress={() => setIsFavourite(!isFavourite)}>
-                    <HeartIcon name="heart" size={24} strokeWidth={4.5} color={isFavourite ? "#ff7171" : "white"} />
-                </TouchableOpacity>
-            </Animated.View>
+                {/* Back button */}
+                <Animated.View entering={FadeIn.delay(200).duration(1000)} style={styles.recipeBackButton}>
+                    <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+                        <ChevronLeftIcon name="chevron-left" size={24} strokeWidth={6.5} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.recipeFavourite} onPress={() => setIsFavourite(!isFavourite)}>
+                        <HeartIcon name="heart" size={24} strokeWidth={4.5} color={isFavourite ? "#ff7171" : "white"} />
+                    </TouchableOpacity>
+                </Animated.View>
 
-            {/* Meal description */}
-            {loading ? (
-                <Loading size="large" />
-            ) : (
-                <View style={styles.mealDetailsContainer}>
-                    {/* Name and area */}
-                    <Animated.View entering={FadeInDown.duration(700).springify().damping(12)} style={styles.detailsRow}>
-                        <Text style={styles.mealName}>{meal?.strMeal}</Text>
-                        <Text style={styles.mealArea}>{meal?.strArea}</Text>
-                    </Animated.View>
-                    {/* misc data */}
-                    <Animated.View entering={FadeInDown.delay(100).duration(700).springify().damping(12)} style={styles.detailsRow}>
-                        <View style={styles.detailItem}>
-                            <ClockIcon size={32} strokeWidth={2.5} color="#000000" />
-                            <Text style={styles.detailText}>35</Text>
-                            <Text style={styles.detailText}>Mins</Text>
-                        </View>
-                        <View style={styles.detailItem}>
-                            <UsersIcon size={32} strokeWidth={2.5} color="#000000" />
-                            <Text style={styles.detailText}>3</Text>
-                            <Text style={styles.detailText}>Servings</Text>
-                        </View>
-                        <View style={styles.detailItem}>
-                            <FireIcon size={32} strokeWidth={2.5} color="#000000" />
-                            <Text style={styles.detailText}>103</Text>
-                            <Text style={styles.detailText}>Cal</Text>
-                        </View>
-                        <View style={styles.detailItem}>
-                            <Square3Stack3DIcon size={32} strokeWidth={2.5} color="#000000" />
-                            <Text style={styles.detailText}></Text>
-                            <Text style={styles.detailText}>Easy</Text>
-                        </View>
-                    </Animated.View>
+                {/* Meal description */}
+                {loading ? (
+                    <Loading size="large" />
+                ) : (
+                    <View style={styles.mealDetailsContainer}>
+                        {/* Name and area */}
+                        <Animated.View entering={FadeInDown.duration(700).springify().damping(12)} style={styles.detailsRow}>
+                            <Text style={styles.mealName}>{meal?.strMeal}</Text>
+                            <Text style={styles.mealArea}>{meal?.strArea}</Text>
+                        </Animated.View>
+                        {/* misc data */}
 
-                    {/* Ingredients */}
-                    <Animated.View entering={FadeInDown.delay(200).duration(700).springify().damping(12)} style={styles.ingredientsContainer}>
-                        <Text style={styles.ingredientsTitle}>Ingredients</Text>
-                        {ingredientsIndexes(meal).map(i => (
-                            <View key={i} style={styles.ingredientItem}>
-                                <View style={styles.bulletPoint}></View>
-                                <Text style={styles.ingredientText}>
-                                    {meal['strMeasure' + i]} {meal['strIngredient' + i]}
-                                </Text>
+                        {/* can be used if someone figures out formula to check from strInstructions data filtering for each type */}
+
+                        <Animated.View entering={FadeInDown.delay(100).duration(700).springify().damping(12)} style={styles.detailsRow}>
+                            <View style={styles.detailItem}>
+                                <ClockIcon size={32} strokeWidth={2.5} color="#000000" />
+                                <Text style={styles.detailText}>{extractCookingTime(meal?.strInstructions)}</Text>
+                                <Text style={styles.detailText}>Mins</Text>
                             </View>
-                        ))}
-                    </Animated.View>
-
-                    {/* Instructions */}
-                    <Animated.View entering={FadeInDown.delay(300).duration(700).springify().damping(12)} style={styles.instructionsContainer}>
-                        <Text style={styles.instructionsTitle}>Instructions</Text>
-                        <Text style={styles.instructionsText}>{meal?.strInstructions}</Text>
-                    </Animated.View>
-
-                    {/* Recipe video */}
-                    {meal?.strYoutube && (
-                        <Animated.View entering={FadeInDown.delay(400).duration(700).springify().damping(12)} style={styles.videoContainer}>
-                            <Text style={styles.videoTitle}>Recipe Video</Text>
-                            <YouTubeIframe
-                                videoId={getYoutubeVideoId(meal.strYoutube)}
-                                height={200}
-                            />
+                            <View style={styles.detailItem}>
+                                <UsersIcon size={32} strokeWidth={2.5} color="#000000" />
+                                <Text style={styles.detailText}>{extractServings(meal?.strInstructions)}</Text>
+                                <Text style={styles.detailText}>Servings</Text>
+                            </View>
+                            <View style={styles.detailItem}>
+                                <FireIcon size={32} strokeWidth={2.5} color="#000000" />
+                                <Text style={styles.detailText}>{extractServingsAndCalculateCalories(meal?.strInstructions)}</Text>
+                                <Text style={styles.detailText}>Cal</Text>
+                            </View>
+                            <View style={styles.detailItem}>
+                                <Square3Stack3DIcon size={32} strokeWidth={2.5} color="#000000" />
+                                <Text style={styles.detailText}></Text>
+                                <Text style={styles.detailText}>Easy</Text>
+                            </View>
                         </Animated.View>
 
+                        {/* Ingredients */}
+                        <Animated.View entering={FadeInDown.delay(200).duration(700).springify().damping(12)} style={styles.ingredientsContainer}>
+                            <Text style={styles.ingredientsTitle}>Ingredients</Text>
+                            {ingredientsIndexes(meal).map(i => (
+                                <View key={i} style={styles.ingredientItem}>
+                                    <View style={styles.bulletPoint}></View>
+                                    <Text style={styles.ingredientText}>
+                                        {meal['strMeasure' + i]} {meal['strIngredient' + i]}
+                                    </Text>
+                                </View>
+                            ))}
+                        </Animated.View>
 
-                    )}
-                </View>
-            )}
-        </ScrollView>
-       </> 
+                        {/* Instructions */}
+                        <Animated.View entering={FadeInDown.delay(300).duration(700).springify().damping(12)} style={styles.instructionsContainer}>
+                            <Text style={styles.instructionsTitle}>Instructions</Text>
+                            <Text style={styles.instructionsText}>{meal?.strInstructions}</Text>
+                        </Animated.View>
+
+                        {/* Recipe video */}
+                        {meal?.strYoutube && (
+                            <Animated.View entering={FadeInDown.delay(400).duration(700).springify().damping(12)} style={styles.videoContainer}>
+                                <Text style={styles.videoTitle}>Recipe Video</Text>
+                                <YouTubeIframe
+                                    videoId={getYoutubeVideoId(meal.strYoutube)}
+                                    height={200}
+                                />
+                            </Animated.View>
+
+
+                        )}
+                    </View>
+                )}
+            </ScrollView>
+        </>
     );
 };
 
@@ -228,7 +314,7 @@ const styles = StyleSheet.create({
     mealArea: {
         fontSize: 18,
         fontWeight: '600',
-        top: 130,
+        top: 200,
     },
     ingredientsContainer: {
         marginBottom: 20,
