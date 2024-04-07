@@ -7,6 +7,7 @@ import ShoppingList from "./ShoppingList";
 import Planner from "./Planner";
 import MyAccount from "./MyAccount";
 import RecipeDetails from "./RecipeDetails";
+import Settings from "./Settings";
 
 export {
     Welcome,
@@ -17,5 +18,6 @@ export {
     RecipeDetails,
     ShoppingList,
     Planner,
-    MyAccount
+    MyAccount,
+    Settings
 }
