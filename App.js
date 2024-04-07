@@ -1,6 +1,6 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Welcome, Home, RegistrationAndLogin, Registration, Login } from './screens';
+import { Welcome, Home, RegistrationAndLogin, Registration, Login, MyAccount, Settings } from './screens';
 import { NavigationContainer } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -46,6 +46,18 @@ export default function App() {
           options={{ headerShown: false }}
         />
 
+        <Stack.Screen
+          name="MyAccount"
+          component={MyAccount}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="Settings"
+          component={Settings}
+          options={{ headerShown: true }}
+        />
+
       </Stack.Navigator>
 
     </NavigationContainer>
@@ -68,6 +80,17 @@ const HomeStack = () => {
           // headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons name="home" color={color} size={size} />
+          )
+        }}
+      />
+      <Tab.Screen
+        name="MyAccountTab"
+        component={MyAccount}
+        options={{
+          // mahdollisesti väliaikaisesti pois käytöstä
+          // headerShown: false,
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="account-circle" color={color} size={size} />
           )
         }}
       />
