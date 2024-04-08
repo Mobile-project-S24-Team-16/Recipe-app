@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Linking, Dimensions } from 'react-native';
 import React, { useEffect, useState } from 'react';
 // import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
@@ -12,6 +12,9 @@ import YouTubeIframe from 'react-native-youtube-iframe';
 import axios from 'axios';
 import Loading from '../components/loading';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+
+
+const screenWidth = Dimensions.get('window').width;
 
 const RecipeDetails = (props) => {
     // Get the recipe item from the navigation params
@@ -43,7 +46,6 @@ const RecipeDetails = (props) => {
         const regexMinutes = /\b(\d+)\s*(?:minutes?|mins?)\b/gi; // Match minutes or mins
         const regexHours = /\b(\d+)\s*hours?\b/gi; // Match hours
         const regexSeconds = /\b(\d+)\s*seconds?\b/gi; // Match seconds
-        const regexNumbers = /\b([1-5]?\d)\b/gi; // Match any numbers between 1 and 60
 
         let totalMinutes = 0;
 
@@ -66,6 +68,19 @@ const RecipeDetails = (props) => {
         }
 
         return totalMinutes;
+    };
+
+    // Function to extract difficulty making from instructions
+    const extractDifficultyMaking = (totalMinutes) => {
+        if (totalMinutes <= 15) {
+            return "Quick";
+        } else if (totalMinutes <= 30) {
+            return "Easy";
+        } else if (totalMinutes <= 45) {
+            return "Moderate";
+        } else if (totalMinutes >= 60) {
+            return "Hard";
+        }
     };
 
     // Function to extract serving size from instructions
@@ -208,8 +223,7 @@ const RecipeDetails = (props) => {
                             </View>
                             <View style={styles.detailItem}>
                                 <Square3Stack3DIcon size={32} strokeWidth={2.5} color="#000000" />
-                                <Text style={styles.detailText}></Text>
-                                <Text style={styles.detailText}>Easy</Text>
+                                <Text style={styles.detailText}>{extractDifficultyMaking(extractCookingTime(meal?.strInstructions))}</Text>
                             </View>
                         </Animated.View>
 
@@ -259,7 +273,7 @@ const styles = StyleSheet.create({
     },
     recipeImage: {
         width: '100%',
-        height: 400,
+        height: screenWidth * 0.9,
         borderRadius: 20,
         borderBottomLeftRadius: 40,
         borderBottomRightRadius: 40,
