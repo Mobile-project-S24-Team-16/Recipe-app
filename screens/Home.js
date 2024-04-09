@@ -111,9 +111,11 @@ const Home = () => {
                         query={query}
                         setQuery={setQuery}
                         handleSubmit={handleSubmit}
+                        noResults={meals.length === 0 && !isLoading && query !== ''}
+                        clearSearch={query !== ''}
                     />
                     {isLoading ? (
-                        <ActivityIndicator size="small" color="#FFBA5A" />
+                        <ActivityIndicator size="large" color="#FFBA5A" />
                     ) : (
                         <RecipeList recipes={recipes} />
                     )}
@@ -132,14 +134,14 @@ const Home = () => {
 
                 {/* Recipes */}
                 <View>
-                    {meals.length === 0 && query !== '' ? (
-                        <Text style={{ textAlign: 'center' }}>Recipe not found!</Text> // Display message if no recipes found
-                    ) : meals.length > 0 ? (
+                    {meals === null && !isLoading && query !== '' ? (
+                        <Text style={{ textAlign: 'center' }}>No recipes found for "{query}"</Text>
+                    ) : meals && meals.length > 0 ? (
                         <Recipes meals={meals} categories={categories} />
                     ) : (
-                        <Text style={{ textAlign: 'center' }}>Loading recipes...</Text>
+                        <Text style={{ textAlign: 'center' }}>{isLoading ? 'Loading recipes...' : ''}</Text>
                     )}
-                    {meals.length > 0 && ( // Only show button if recipes are displayed
+                    {meals && meals.length > 0 && ( // Only show button if recipes are displayed
                         <View style={styles.backButtonContainer}>
                             <Button style={styles.backButton} title="Back" onPress={() => navigation.navigate('Home')} />
                         </View>
