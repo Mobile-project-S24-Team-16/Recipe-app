@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, TextInput, Button, StyleSheet, Text } from 'react-native';
 
+// Search bar component
 const SearchBar = ({ handleSubmit, query, isLoading, setQuery, noResults, clearSearch }) => {
   return (
     <View style={styles.searchBar}>
       <TextInput
         value={query}
         style={styles.inputSearch}
-        placeholder="Search for a recipe by name or by category"
+        placeholder="Search for a recipe..."
         onChangeText={setQuery}
         disabled={isLoading}
       />
