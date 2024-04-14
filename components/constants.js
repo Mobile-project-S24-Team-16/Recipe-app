@@ -1,3 +1,5 @@
+export const STORAGE_KEY = 'unit_type'
+
 //Dummy data for categories and meals
 export const categoryData = [
     {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { login, logout } from '../components/Auth';
+import { login, logout, } from '../components/Auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase/Config';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
@@ -76,7 +76,7 @@ const LoginInformationScreen = ({ navigation }) => {
         <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
           <Text style={styles.forgotPasswordText}>Forgot your password? Reset it by clicking this.</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Registration')}>

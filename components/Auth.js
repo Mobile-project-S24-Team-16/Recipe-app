@@ -5,10 +5,12 @@ import {
     sendPasswordResetEmail,
     signInWithEmailAndPassword,
     signOut,
-    updateEmail,
+    verifyBeforeUpdateEmail,
     updatePassword,
+    reauthenticateWithCredential,
+    EmailAuthProvider
 } from 'firebase/auth';
-import { collection, deleteDoc, doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, onSnapshot, setDoc, updateDoc } from 'firebase/firestore';
 import { auth, db, RECIPES_REF, USERS_REF } from '../firebase/Config';
 
 export const register = async (email, password, nickname) => {
@@ -48,14 +50,33 @@ export const logout = async () => {
     })
 }
 
-export const changeEmail = async (email) => {
-    await updateEmail(auth.currentUser, email)
-    .then(() => {
+export const changeEmail = async (email, db, USERS_REF) => {
+    await verifyBeforeUpdateEmail(auth.currentUser, email)
+    .then(async () => {
         console.log('Email updated successfully!');
+        Alert.alert('Success! Please verify your new email address!');
+        const colRef = collection(db, USERS_REF);
+        await updateDoc(doc(colRef, auth.currentUser.uid), {
+            email: email
+        })
     })
     .catch((error) => {
+        if (error.message.includes('auth/requires-recent-login')) {
+            throw error;
+        }
         console.log('Email update failed: ', error.message);
-        Alert.alert('Email update failed', error.message);
+    })
+}
+
+export const reauthenticate = async (password) => {
+    const credential = EmailAuthProvider.credential(auth.currentUser.email, password);
+    await reauthenticateWithCredential(auth.currentUser, credential)
+    .then(() => {
+        console.log('Reauthentication successful!');
+    })
+    .catch((error) => {
+        console.log('Reauthentication failed: ', error.message);
+        Alert.alert('Reauthentication failed', error.message);
     })
 }
 
@@ -63,15 +84,19 @@ export const changePassword = async (password) => {
     await updatePassword(auth.currentUser, password)
     .then(() => {
         console.log('Password updated successfully!');
+        Alert.alert('Password updated successfully!');
     })
     .catch((error) => {
+        if (error.message.includes('auth/requires-recent-login')) {
+            throw error;
+        }
         console.log('Password update failed: ', error.message);
         Alert.alert('Password update failed', error.message);
     })
 }
 
 export const resetPassword = async (email) => {
-    auth.languageCode = 'fi';
+    auth.languageCode = 'en';
     await sendPasswordResetEmail(auth, email)
     .then(() => {
         console.log('Password reset email sent successfully!');

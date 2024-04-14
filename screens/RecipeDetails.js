@@ -12,11 +12,79 @@ import YouTubeIframe from 'react-native-youtube-iframe';
 import axios from 'axios';
 import Loading from '../components/loading';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { STORAGE_KEY } from '../components/constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const screenWidth = Dimensions.get('window').width;
 
 const RecipeDetails = (props) => {
+
+    const [unit, setUnit] = useState('metric');
+
+    const getUnit = async () => {
+        try {
+            const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+            if (jsonValue !== null) {
+                setUnit(JSON.parse(jsonValue));
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    useEffect(() => {
+        const unsubscribe = props.navigation.addListener('focus', () => {
+            getUnit();
+        });
+        return unsubscribe;
+    }, [props.navigation]);
+
+    function convertUnits(measurement, unit) {
+
+        // Conversion tables for metric to imperial and vice versa
+
+        const metricToImperial = {
+            'g': { ratio: 0.035274, newUnit: 'oz' },
+            'kg': { ratio: 2.20462, newUnit: 'lb' },
+            'ml': { ratio: 0.033814, newUnit: 'fl oz' },
+            'l': { ratio: 1.05669, newUnit: 'qt' },
+            // Add more units as needed
+        };
+    
+        const imperialToMetric = {
+            'oz': { ratio: 28.3495, newUnit: 'g' },
+            'lb': { ratio: 0.453592, newUnit: 'kg' },
+            'fl oz': { ratio: 29.5735, newUnit: 'ml' },
+            'qt': { ratio: 0.946353, newUnit: 'l' },
+            'cup': { ratio: 236.588, newUnit: 'ml' },
+            'cups': { ratio: 236.588, newUnit: 'ml' },
+            'ounce': { ratio: 28.3495, newUnit: 'g' },
+            'ounces': { ratio: 28.3495, newUnit: 'g' },
+            // Add more units as needed
+        };
+    
+        const conversionTable = unit === 'metric' ? imperialToMetric : metricToImperial;
+    
+        const regex = /(\d+\.?\d*)\s*(\w+)/;
+        const match = measurement.match(regex);
+    
+        if (match) {
+            const value = parseFloat(match[1]);
+            const originalUnit = match[2];
+    
+            if (conversionTable[originalUnit]) {
+                const convertedValue = value * conversionTable[originalUnit].ratio;
+                const newUnit = conversionTable[originalUnit].newUnit;
+    
+                return `${convertedValue.toFixed(0)} ${newUnit}`;
+            }
+        }
+    
+        // If no conversion was possible, return the original measurement
+        return measurement;
+    }
+
     // Get the recipe item from the navigation params
     let item = props.route.params;
 
@@ -234,7 +302,7 @@ const RecipeDetails = (props) => {
                                 <View key={i} style={styles.ingredientItem}>
                                     <View style={styles.bulletPoint}></View>
                                     <Text style={styles.ingredientText}>
-                                        {meal['strMeasure' + i]} {meal['strIngredient' + i]}
+                                        {convertUnits(meal['strMeasure' + i], unit)} {meal['strIngredient' + i]}
                                     </Text>
                                 </View>
                             ))}

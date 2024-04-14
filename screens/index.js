@@ -8,6 +8,7 @@ import Planner from "./Planner";
 import MyAccount from "./MyAccount";
 import RecipeDetails from "./RecipeDetails";
 import Settings from "./Settings";
+import ResetPassword from "./ResetPassword";
 
 export {
     Welcome,
@@ -19,5 +20,6 @@ export {
     ShoppingList,
     Planner,
     MyAccount,
-    Settings
+    Settings,
+    ResetPassword
 }
