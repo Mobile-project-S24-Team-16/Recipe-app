@@ -1,6 +1,6 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Welcome, Home, RegistrationAndLogin, Registration, Login, MyAccount, Settings, RecipeDetails } from './screens';
+import { Welcome, Home, RegistrationAndLogin, Registration, Login, MyAccount, Settings, RecipeDetails, ResetPassword } from './screens';
 import { NavigationContainer } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -62,6 +62,12 @@ export default function App() {
           name="Settings"
           component={Settings}
           options={{ headerShown: true }}
+        />
+
+        <Stack.Screen
+          name="ResetPassword"
+          component={ResetPassword}
+          options={{ headerShown: false }}
         />
 
       </Stack.Navigator>

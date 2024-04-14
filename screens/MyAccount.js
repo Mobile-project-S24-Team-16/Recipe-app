@@ -5,7 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth, db, USERS_REF } from '../firebase/Config'
 import { TouchableOpacity } from 'react-native-gesture-handler'
 import { logout } from '../components/Auth'
-import { getDoc, doc } from 'firebase/firestore'
+import { getDoc, doc, onSnapshot } from 'firebase/firestore'
 import { StyleSheet } from 'react-native'
 import AccountNavigator from '../components/AccountNavigator'
 import { MaterialIcons } from '@expo/vector-icons'
@@ -17,26 +17,34 @@ const MyAccount = ({ navigation }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        onAuthStateChanged(auth, (user) => {
+        let unsubscribeSnapshot;
+        const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+            if (unsubscribeSnapshot) {
+                unsubscribeSnapshot();
+            }
             if (user) {
                 setIsLoggedIn(true);
                 setIsLoading(true);
-                (async () => {
-                    const docRef = doc(db, USERS_REF, auth.currentUser.uid);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        setNickname(docSnap.data().nickname);
+                const docRef = doc(db, USERS_REF, auth.currentUser.uid);
+                unsubscribeSnapshot = onSnapshot(docRef, (doc) => {
+                    if (doc.exists()) {
+                        setNickname(doc.data().nickname);
                         setIsLoading(false);
-                    }
-                    else {
+                    } else {
                         console.log('No such document!');
                     }
-                })();
+                });
             } else {
                 setIsLoggedIn(false);
                 setIsLoading(false);
             }
         });
+        return () => {
+            unsubscribeAuth();
+            if (unsubscribeSnapshot) {
+                unsubscribeSnapshot();
+            }
+        }
     }, []);
 
     const handleLogout = () => {
