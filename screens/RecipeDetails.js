@@ -8,6 +8,11 @@ import { UsersIcon } from 'react-native-heroicons/outline';
 import { FireIcon } from 'react-native-heroicons/outline';
 import { Square3Stack3DIcon } from 'react-native-heroicons/outline';
 import { useNavigation } from '@react-navigation/native';
+import { collection, getDocs, deleteDoc, doc, addDoc, getDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+//import { useAuthState } from 'react-firebase-hooks/auth';
+import { db, USERS_REF, FAVORITES_REF } from '../firebase/Config';
+import { auth } from '../firebase/Config';
 import YouTubeIframe from 'react-native-youtube-iframe';
 import axios from 'axios';
 import Loading from '../components/loading';
@@ -100,14 +105,106 @@ const RecipeDetails = (props) => {
     // Loading stage
     const [loading, setLoading] = useState(true);
 
+    const [favoriteRecipes, setFavoriteRecipes] = useState([]);
+
     // Navigation hook
     const navigation = useNavigation();
+
+    // Auth state
+    const [currentUser, setCurrentUser] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [nickname, setNickname] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Listen for changes in the user's authentication state
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                setCurrentUser(user);
+                setIsLoggedIn(true);
+                setIsLoading(true);
+                (async () => {
+                    const docRef = doc(db, USERS_REF, user.uid);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        setNickname(docSnap.data().nickname);
+                        setIsLoading(false);
+                        // checkIfFavourite(user, item);
+                    }
+                    else {
+                        console.log('No such document!');
+                        setIsLoading(false);
+                    }
+                })();
+            } else {
+                setCurrentUser(null);
+                setIsLoggedIn(false);
+                setIsLoading(false);
+            }
+        });
+    
+        // Clean up the listener when the component is unmounted
+        return () => unsubscribe();
+    }, []);
 
     // useEffect to get meal data
     useEffect(() => {
         getMealData(item.idMeal);
     }, []);
 
+    // Add recipe to favorites
+    const addToFavorites = async () => {
+        try {
+            const favoriteRef = collection(db, USERS_REF, auth.currentUser.uid, FAVORITES_REF);
+            await addDoc(favoriteRef, {
+                recipeId: meal?.idMeal,
+                strMealThumb: meal?.strMealThumb,
+                strMeal: meal?.strMeal,
+                strCategory: meal?.strCategory,
+                strInstructions: meal?.strInstructions,
+                strYouTube: meal?.strYoutube,
+                ingredients: Array.from({length: 20}, (_, i) => ({ 
+                    measure: meal?.[`strMeasure${i+1}`], 
+                    ingredient: meal?.[`strIngredient${i+1}`] 
+                })).filter(ingredient => ingredient.measure || ingredient.ingredient)
+            });
+            setIsFavourite(true);
+        } catch (error) {
+            console.error('Error adding to favorites:', error);
+        }
+    };
+
+    // Remove recipe from favorites
+    const removeFromFavorites = async () => {
+        try {
+            const favoriteQuery = collection(db, USERS_REF, auth.currentUser.uid, FAVORITES_REF);
+            const snapshot = await getDocs(favoriteQuery);
+            snapshot.forEach(async (doc) => {
+                if (doc.data().recipeId === item.idMeal) {
+                    await deleteDoc(doc.ref);
+                    setIsFavourite(false);
+                }
+            });
+        } catch (error) {
+            console.error('Error removing from favorites:', error);
+        }
+    };
+
+    // Check if recipe is a favorite
+    useEffect(() => {
+        const checkIfFavourite = async () => {
+            const favoriteQuery = collection(db, USERS_REF, auth.currentUser.uid, FAVORITES_REF);
+            const snapshot = await getDocs(favoriteQuery);
+            snapshot.forEach((doc) => {
+                if (doc.data().recipeId === item.idMeal) {
+                    setIsFavourite(true);
+                }
+            });
+        };
+    
+        checkIfFavourite();
+    }, []);
+    
 
     // Function to extract cooking time from instructions
     const extractCookingTime = (instructions) => {
@@ -156,13 +253,13 @@ const RecipeDetails = (props) => {
         const regexServings = /\b(\d+)\s*serving(s?)\b/gi; // Match servings with number capture group
         const regexNumbers = /\b([1-9]|10)\b/gi; // Match numbers between 1 and 10
         let totalServings = null;
-    
+
         // Extract servings and numbers from instructions
         const matchesServings = instructions.matchAll(regexServings);
         for (const match of matchesServings) {
             totalServings = parseInt(match[1]); // Set captured number as total servings
         }
-    
+
         // If no servings are found, extract numbers between 1 and 10 from instructions
         if (totalServings === null || isNaN(totalServings)) {
             const matchesNumbers = instructions.matchAll(regexNumbers);
@@ -170,22 +267,22 @@ const RecipeDetails = (props) => {
                 totalServings = parseInt(match[0]); // Set matched number as total servings
             }
         }
-    
+
         return totalServings;
     };
 
-     // Function to extract calories from instructions
-     const extractServingsAndCalculateCalories = (instructions) => {
+    // Function to extract calories from instructions
+    const extractServingsAndCalculateCalories = (instructions) => {
         const regexServings = /\b(\d+)\s*serving(s?)\b/gi;
-        const regexNumbers = /\b([1-9]|10)\b/gi; 
+        const regexNumbers = /\b([1-9]|10)\b/gi;
         let totalServings = null;
-    
+
         // Extract servings and numbers from instructions
         const matchesServings = instructions.matchAll(regexServings);
         for (const match of matchesServings) {
             totalServings = parseInt(match[1]); // Set captured number as total servings
         }
-    
+
         // If no servings are found, extract numbers between 1 and 10 from instructions
         if (totalServings === null || isNaN(totalServings)) {
             const matchesNumbers = instructions.matchAll(regexNumbers);
@@ -193,10 +290,10 @@ const RecipeDetails = (props) => {
                 totalServings = parseInt(match[0]); // Set matched number as total servings
             }
         }
-    
+
         // Calculate total calories based on servings (assuming one serving is 130 calories)
         const totalCalories = totalServings * 130;
-        
+
         return totalCalories;
     };
 
@@ -254,8 +351,8 @@ const RecipeDetails = (props) => {
                     <TouchableOpacity onPress={() => navigation.navigate("Home")}>
                         <ChevronLeftIcon name="chevron-left" size={24} strokeWidth={6.5} color="#fff" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.recipeFavourite} onPress={() => setIsFavourite(!isFavourite)}>
-                        <HeartIcon name="heart" size={24} strokeWidth={4.5} color={isFavourite ? "#ff7171" : "white"} />
+                    <TouchableOpacity style={styles.recipeFavourite} onPress={isFavourite ? removeFromFavorites : addToFavorites}>
+                        <HeartIcon name="heart" size={24} strokeWidth={4.5} color={isFavourite ? "red" : "white"} />
                     </TouchableOpacity>
                 </Animated.View>
 
