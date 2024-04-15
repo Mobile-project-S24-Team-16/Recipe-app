@@ -351,7 +351,8 @@ const RecipeDetails = (props) => {
                     <TouchableOpacity onPress={() => navigation.navigate("Home")}>
                         <ChevronLeftIcon name="chevron-left" size={24} strokeWidth={6.5} color="#fff" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.recipeFavourite} onPress={isFavourite ? removeFromFavorites : addToFavorites}>
+                    <TouchableOpacity style={styles.recipeFavourite} onPress={isFavourite ? removeFromFavorites : addToFavorites}
+                                    disabled={!isLoggedIn}>
                         <HeartIcon name="heart" size={24} strokeWidth={4.5} color={isFavourite ? "red" : "white"} />
                     </TouchableOpacity>
                 </Animated.View>
