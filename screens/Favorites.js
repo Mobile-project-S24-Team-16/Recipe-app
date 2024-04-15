@@ -1,30 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image, Button } from 'react-native';
-import { collection, query, getDocs, db, doc, getDoc, deleteDoc, onSnapshot, querySnapshot } from 'firebase/firestore';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Image} from 'react-native';
+import { collection, query, getDocs, doc, getDoc, deleteDoc, onSnapshot, querySnapshot } from 'firebase/firestore';
 //import { useAuthState } from 'react-firebase-hooks/auth';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, FAVORITES_REF, USERS_REF } from '../firebase/Config';
+import { db, FAVORITES_REF, USERS_REF } from '../firebase/Config';
+import { auth } from '../firebase/Config';
 import { logout } from '../components/Auth';
 import YoutubeIframe from 'react-native-youtube-iframe';
+import { set } from 'firebase/database';
+import { Card, Button } from 'react-native-paper';
 
-const Favorites = () => {
+const Favorites = ({ recipeId }) => {
     const [favoriteRecipes, setFavoriteRecipes] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
-    // const [users, setUsers] = useState([]);
+
+    // State to check if the recipe is a favourite
+    const [isFavourite, setIsFavourite] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [nickname, setNickname] = useState('');
     const [meal, setMeal] = useState(null);
 
-    // get youtube video id from url
-    const getYoutubeVideoId = url => {
-        const regex = /[?&]v=([^&]+)/;
-        const match = url.match(regex);
-        if (match && match[1]) {
-            return match[1];
-        }
-        return null;
-    };
 
     // Listen for changes in the user's authentication state
     useEffect(() => {
@@ -47,89 +43,73 @@ const Favorites = () => {
                 setFavoriteRecipes([]);
             }
         });
-    
+
         return () => unsubscribe();
     }, []);
-
-
-    // useEffect(() => {
-    //     const unsubscribe = loadFavoriteRecipes(user);
-    //     return unsubscribe;
-    // }, [user]);
-
-    // const loadFavoriteRecipes = (user) => {
-    //     const userRef = doc(db, USERS_REF, user.uid);
-    //     const favoriteRef = collection(userRef, FAVORITES_REF);
-
-    //     const unsubscribe = favoriteRef.onSnapshot(querySnapshot => {
-    //         const favoriteRecipes = [];
-    //         querySnapshot.forEach((doc) => {
-    //             const { recipeId, strMealThumb, strCategory, strInstructions, strYoutube, ingredients } = doc.data();
-    //             favoriteRecipes.push({
-    //                 id: doc.id,
-    //                 recipeId,
-    //                 strMealThumb,
-    //                 strCategory,
-    //                 strInstructions,
-    //                 strYoutube,
-    //                 ingredients,
-    //             });
-    //         });
-    //         setFavoriteRecipes(favoriteRecipes);
-    //     });
-
-    //     // Clean up the subscription on unmount
-    //     return () => unsubscribe();
-    // };
 
     // fetch data from farorite recipe from Firbase Firestore
     const loadFavoriteRecipes = () => {
         const favoriteRef = collection(db, USERS_REF, auth.currentUser.uid, FAVORITES_REF);
-    
+
         const unsubscribe = onSnapshot(favoriteRef, (querySnapshot) => {
             const favoriteRecipes = [];
             querySnapshot.forEach((doc) => {
-                const { recipeId, strMealThumb, strCategory, strInstructions, strYoutube, ingredients, measure } = doc.data();
+                const { recipeId, strMeal, strMealThumb, strCategory, strInstructions, ingredients, measure } = doc.data();
                 favoriteRecipes.push({
                     id: doc.id,
                     recipeId,
+                    strMeal,
                     strMealThumb,
                     strCategory,
                     strInstructions,
-                    strYoutube,
                     ingredients,
                     measure
                 });
             });
             setFavoriteRecipes(favoriteRecipes);
         });
-    
+
         // Clean up the subscription on unmount
         return () => unsubscribe();
     };
 
-    // useEffect(() => {
-    //     const unsubscribe = loadFavoriteRecipes(user);
-    //     return unsubscribe;
-    // }, [user]); 
+    useEffect(() => {
+        const unsubscribe = loadFavoriteRecipes(currentUser);
+        return unsubscribe;
+    }, [currentUser]);
 
-    // Remove a recipe from favorites
-    const removeFromFavorites = async (id) => {
-        const currentUser = auth.currentUser;
-        if (!currentUser) return;
-
-        const userRef = doc(db, USERS_REF, auth.currentUser.uid);
-        const favoriteRef = doc(userRef, FAVORITES_REF, id);
-
+    // remove favorite recipe from Firebase Firestore
+    const removeFromFavorites = async (idMeal) => {
         try {
-            await deleteDoc(favoriteRef);
-            console.log('Document successfully deleted!');
-            // Update the favoriteRecipes state after a recipe is removed
-            setFavoriteRecipes(favoriteRecipes.filter(recipe => recipe.recipeId !== id));
+            const favoriteQuery = collection(db, USERS_REF, auth.currentUser.uid, FAVORITES_REF);
+            const snapshot = await getDocs(favoriteQuery);
+            snapshot.forEach(async (doc) => {
+                if (doc.data().recipeId === idMeal) {
+                    await deleteDoc(doc.ref);
+                    setFavoriteRecipes(favoriteRecipes.filter(recipe => recipe.recipeId !== idMeal));
+                    setIsFavourite(false);
+                }
+            });
         } catch (error) {
-            console.error('Error removing document: ', error);
+            console.error('Error removing from favorites:', error);
         }
     };
+
+    // check if the recipe is a favorite
+    useEffect(() => {
+        const checkIfFavourite = async (idMeal) => {
+            const favoriteQuery = collection(db, USERS_REF, auth.currentUser.uid, FAVORITES_REF);
+            const snapshot = await getDocs(favoriteQuery);
+            snapshot.forEach((doc) => {
+                if (doc.data().recipeId === idMeal) {
+                    setIsFavourite(true);
+                }
+            });
+        };
+
+        checkIfFavourite(recipeId);
+    }, [recipeId]);
+
 
     const handleLogout = () => {
         logout();
@@ -137,29 +117,29 @@ const Favorites = () => {
 
     // render favorite recipe
     const renderFavoriteRecipe = ({ item }) => (
-        <TouchableOpacity>
-            <View style={styles.container}>
-                <Image source={{ uri: item.strMealThumb }} style={styles.image} />
+        <Card style={styles.container}>
+            <Card.Cover source={{ uri: item.strMealThumb }} style={styles.image} />
+            <Card.Title title={item.strMeal} titleStyle={{fontWeight: 'bold'}}/>
+            <Card.Content>
                 <Text style={styles.category}>{item.strCategory}</Text>
                 <Text style={styles.instructions}>{item.strInstructions}</Text>
-                <YoutubeIframe
-                    videoId={getYoutubeVideoId(item.strYoutube)}
-                    height={200}
-                    style={styles.youtube}
-                />
                 {item.ingredients.map((ingredient, index) => (
                     <View key={index} style={styles.ingredientsContainer}>
                         <Text style={styles.measure}>{ingredient.measure}</Text>
                         <Text style={styles.ingredient}>{ingredient.ingredient}</Text>
                     </View>
                 ))}
+            </Card.Content>
+            <Card.Actions>
                 <Button
-                    title="Remove from Favorites"
-                    onPress={() => removeFromFavorites(item.id)}
+                    mode="contained"
+                    onPress={() => removeFromFavorites(item.recipeId)}
                     style={styles.button}
-                />
-            </View>
-        </TouchableOpacity>
+                >
+                    Remove
+                </Button>
+            </Card.Actions>
+        </Card>
     );
 
     if (isLoading) {
@@ -197,8 +177,11 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFC786',
+        backgroundColor: '#ffd3a1',
         paddingHorizontal: 20,
+        marginBottom: 20,
+        
+
     },
     loadingContainer: {
         flex: 1,
@@ -210,12 +193,18 @@ const styles = StyleSheet.create({
         width: 150,
         height: 150,
         resizeMode: 'cover',
+        alignSelf: 'center',
         borderRadius: 20,
         marginBottom: 20,
     },
     category: {
         fontSize: 16,
         marginBottom: 20,
+    },
+    meal: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 10,
     },
     instructions: {
         fontSize: 14,
@@ -227,6 +216,7 @@ const styles = StyleSheet.create({
     ingredientsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        marginBottom: 10,
     },
     measure: {
         marginRight: 5,
@@ -236,6 +226,7 @@ const styles = StyleSheet.create({
     },
     button: {
         marginTop: 20,
+        color: '#2d8cff',
     },
     favoriteRecipesTitle: {
         fontSize: 24,
