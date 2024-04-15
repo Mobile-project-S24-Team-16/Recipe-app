@@ -11,7 +11,8 @@ import { useNavigation } from '@react-navigation/native';
 import { collection, getDocs, deleteDoc, doc, addDoc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 //import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db, USERS_REF, FAVORITES_REF } from '../firebase/Config';
+import { db, USERS_REF, FAVORITES_REF } from '../firebase/Config';
+import { auth } from '../firebase/Config';
 import YouTubeIframe from 'react-native-youtube-iframe';
 import axios from 'axios';
 import Loading from '../components/loading';
@@ -47,7 +48,6 @@ const RecipeDetails = (props) => {
     const [nickname, setNickname] = useState('');
     const [isLoading, setIsLoading] = useState(true);
 
-
     // Listen for changes in the user's authentication state
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -61,7 +61,7 @@ const RecipeDetails = (props) => {
                     if (docSnap.exists()) {
                         setNickname(docSnap.data().nickname);
                         setIsLoading(false);
-                        checkIfFavorite(user, item);
+                        // checkIfFavourite(user, item);
                     }
                     else {
                         console.log('No such document!');
@@ -85,37 +85,13 @@ const RecipeDetails = (props) => {
     }, []);
 
     // Add recipe to favorites
-    // const addToFavorites = async (user, item, meal) => {
-    //     try {
-    //         const userRef = doc(db, USERS_REF, user.uid); // Get a DocumentReference to the user's document
-    //         const favoriteRef = collection(userRef, 'favorites'); // Get a CollectionReference to the 'favorites' collection
-    //         await addDoc(favoriteRef, {
-    //             recipeId: item.idMeal,
-    //             strMealThumb: item.strMealThumb,
-    //             strCategory: meal?.strCategory,
-    //             strInstructions: meal?.strInstructions,
-    //             strYouTube: meal?.strYoutube,
-    //             ingredients: Array.from({length: 20}, (_, i) => ({ 
-    //                 measure: meal?.[`strMeasure${i+1}`], 
-    //                 ingredient: meal?.[`strIngredient${i+1}`] 
-    //             })).filter(ingredient => ingredient.measure && ingredient.ingredient)
-    //         });
-    //         setIsFavourite(true);
-    
-    //         const favoriteRecipes = await loadFavoriteRecipes(user.uid);
-    //         setFavoriteRecipes(favoriteRecipes);
-    //     } catch (error) {
-    //         console.error('Error adding to favorites:', error);
-    //     }
-    // };
-
-    // Add recipe to favorites
     const addToFavorites = async () => {
         try {
             const favoriteRef = collection(db, USERS_REF, auth.currentUser.uid, FAVORITES_REF);
             await addDoc(favoriteRef, {
                 recipeId: meal?.idMeal,
                 strMealThumb: meal?.strMealThumb,
+                strMeal: meal?.strMeal,
                 strCategory: meal?.strCategory,
                 strInstructions: meal?.strInstructions,
                 strYouTube: meal?.strYoutube,
@@ -147,19 +123,20 @@ const RecipeDetails = (props) => {
     };
 
     // Check if recipe is a favorite
-    const checkIfFavorite = async (item) => {
-        try {
+    useEffect(() => {
+        const checkIfFavourite = async () => {
             const favoriteQuery = collection(db, USERS_REF, auth.currentUser.uid, FAVORITES_REF);
             const snapshot = await getDocs(favoriteQuery);
             snapshot.forEach((doc) => {
-                if (doc.data().recipeId === meal?.idMeal) {
+                if (doc.data().recipeId === item.idMeal) {
                     setIsFavourite(true);
                 }
             });
-        } catch (error) {
-            console.error('Error checking if favorite:', error);
-        }
-    };
+        };
+    
+        checkIfFavourite();
+    }, []);
+    
 
     // Function to extract cooking time from instructions
     const extractCookingTime = (instructions) => {
@@ -307,7 +284,7 @@ const RecipeDetails = (props) => {
                         <ChevronLeftIcon name="chevron-left" size={24} strokeWidth={6.5} color="#fff" />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.recipeFavourite} onPress={isFavourite ? removeFromFavorites : addToFavorites}>
-                        <HeartIcon name="heart" size={24} strokeWidth={4.5} color={isFavourite ? "#ff7171" : "white"} />
+                        <HeartIcon name="heart" size={24} strokeWidth={4.5} color={isFavourite ? "red" : "white"} />
                     </TouchableOpacity>
                 </Animated.View>
 
