@@ -41,6 +41,7 @@ const Favorites = ({ recipeId }) => {
                 setIsLoggedIn(false);
                 setIsLoading(false);
                 setFavoriteRecipes([]);
+                unsubscribe();
             }
         });
 
