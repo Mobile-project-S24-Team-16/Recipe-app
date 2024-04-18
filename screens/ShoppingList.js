@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import uuid from 'react-native-uuid';
 
 // Define a key for AsyncStorage
 const STORAGE_KEY = '@shoppingList';
@@ -56,15 +57,24 @@ const ShoppingList = () => {
     // Define functions to add, acquire, and unacquire items
     const addItem = () => {
         if (inputValue) {
-            setItemsToAcquire([...itemsToAcquire, { text: inputValue, acquired: false }]);
-            setInputValue(''); // Clear the input field
+            // Check if item already exists
+            const itemExists = itemsToAcquire.some(item => item.text.toLowerCase() === inputValue.toLowerCase());
+    
+            if (itemExists) {
+                Alert.alert('Item already exists', 'This item is already in your shopping list.');
+            } else {
+                setItemsToAcquire([...itemsToAcquire, { id: uuid.v4(), text: inputValue, acquired: false }]);
+                setInputValue(''); // Clear the input field
+            }
         }
     };
 
+
     // handleItemAcquired and handleItemUnacquired functions
-    const handleItemAcquired = (index) => {
+    const handleItemAcquired = (id) => {
         const updatedItemsToAcquire = [...itemsToAcquire];
         const updatedItemsAcquired = [...itemsAcquired];
+        const index = updatedItemsToAcquire.findIndex(item => item.id === id);
         const item = updatedItemsToAcquire.splice(index, 1)[0]; // Remove from To Acquire
         item.acquired = true; // Mark acquired
         updatedItemsAcquired.push(item); // Add to Acquired
@@ -73,9 +83,10 @@ const ShoppingList = () => {
     };
 
     // handleItemUnacquired function
-    const handleItemUnacquired = (index) => {
+    const handleItemUnacquired = (id) => {
         const updatedItemsAcquired = [...itemsAcquired];
         const updatedItemsToAcquire = [...itemsToAcquire];
+        const index = updatedItemsAcquired.findIndex(item => item.id === id);
         const item = updatedItemsAcquired.splice(index, 1)[0]; // Remove from Acquired
         item.acquired = false; // Mark unacquired
         updatedItemsToAcquire.push(item); // Add to To Acquire
@@ -106,7 +117,7 @@ const ShoppingList = () => {
     const renderItem = ({ item, index, list }) => {
         const iconName = item.acquired ? 'check-circle' : 'radio-button-unchecked'; // Change icon based on acquired status
         const iconColor = item.acquired ? 'green' : 'black'; // Change icon color based on acquired status
-        const onPress = list === 'toAcquire' ? () => handleItemAcquired(index) : () => handleItemUnacquired(index);
+        const onPress = list === 'toAcquire' ? () => handleItemAcquired(item.id) : () => handleItemUnacquired(item.id);
 
         return (
             <View style={styles.listItem}>
@@ -134,7 +145,7 @@ const ShoppingList = () => {
                     data={itemsToAcquire}
                     ListEmptyComponent={<Text>No items to acquire</Text>}
                     renderItem={({ item, index }) => renderItem({ item, index, list: 'toAcquire' })}
-                    keyExtractor={(item) => item.text}
+                    keyExtractor={(item) => item.id.toString()} // Use the unique ID here
                     style={styles.list}
                 />
                 <Text style={styles.listTitle}>Items Acquired</Text>
@@ -142,7 +153,7 @@ const ShoppingList = () => {
                     data={itemsAcquired}
                     ListEmptyComponent={<Text>No acquired items</Text>}
                     renderItem={({ item, index }) => renderItem({ item, index, list: 'acquired' })}
-                    keyExtractor={(item) => item.text}
+                    keyExtractor={(item) => item.id.toString()}
                     style={styles.list}
                 />
             </View>
