@@ -142,9 +142,10 @@ const RecipeDetails = (props) => {
                 setCurrentUser(null);
                 setIsLoggedIn(false);
                 setIsLoading(false);
+                unsubscribe();
             }
         });
-    
+
         // Clean up the listener when the component is unmounted
         return () => unsubscribe();
     }, []);
@@ -465,7 +466,14 @@ const RecipeDetails = (props) => {
                     <TouchableOpacity onPress={() => navigation.navigate("Home")}>
                         <ChevronLeftIcon name="chevron-left" size={24} strokeWidth={6.5} color="#fff" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.recipeFavourite} onPress={isFavourite ? removeFromFavorites : addToFavorites}>
+                    <TouchableOpacity style={styles.recipeFavourite} onPress={() => {
+                        if (!isLoggedIn) {
+                            Alert.alert('Please log in to add or remove favorites');
+                        } else {
+                            isFavourite ? removeFromFavorites() : addToFavorites();
+                        }
+                    }}
+                    >
                         <HeartIcon name="heart" size={24} strokeWidth={4.5} color={isFavourite ? "red" : "white"} />
                     </TouchableOpacity>
                 </Animated.View>
