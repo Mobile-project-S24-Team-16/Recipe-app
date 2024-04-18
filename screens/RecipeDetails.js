@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Linking, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Linking, Dimensions, TextInput, Alert } from 'react-native';
 import React, { useEffect, useState } from 'react';
 // import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
@@ -8,10 +8,10 @@ import { UsersIcon } from 'react-native-heroicons/outline';
 import { FireIcon } from 'react-native-heroicons/outline';
 import { Square3Stack3DIcon } from 'react-native-heroicons/outline';
 import { useNavigation } from '@react-navigation/native';
-import { collection, getDocs, deleteDoc, doc, addDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, addDoc, getDoc, query, where, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 //import { useAuthState } from 'react-firebase-hooks/auth';
-import { db, USERS_REF, FAVORITES_REF } from '../firebase/Config';
+import { db, USERS_REF, FAVORITES_REF, REVIEWS_REF } from '../firebase/Config';
 import { auth } from '../firebase/Config';
 import YouTubeIframe from 'react-native-youtube-iframe';
 import axios from 'axios';
@@ -19,6 +19,8 @@ import Loading from '../components/loading';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { STORAGE_KEY } from '../components/constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import StarRating, { StarRatingDisplay } from 'react-native-star-rating-widget';
+// import { List } from 'react-native-paper';
 
 
 const screenWidth = Dimensions.get('window').width;
@@ -56,7 +58,7 @@ const RecipeDetails = (props) => {
             'l': { ratio: 1.05669, newUnit: 'qt' },
             // Add more units as needed
         };
-    
+
         const imperialToMetric = {
             'oz': { ratio: 28.3495, newUnit: 'g' },
             'lb': { ratio: 0.453592, newUnit: 'kg' },
@@ -68,24 +70,24 @@ const RecipeDetails = (props) => {
             'ounces': { ratio: 28.3495, newUnit: 'g' },
             // Add more units as needed
         };
-    
+
         const conversionTable = unit === 'metric' ? imperialToMetric : metricToImperial;
-    
+
         const regex = /(\d+\.?\d*)\s*(\w+)/;
         const match = measurement.match(regex);
-    
+
         if (match) {
             const value = parseFloat(match[1]);
             const originalUnit = match[2];
-    
+
             if (conversionTable[originalUnit]) {
                 const convertedValue = value * conversionTable[originalUnit].ratio;
                 const newUnit = conversionTable[originalUnit].newUnit;
-    
+
                 return `${convertedValue.toFixed(0)} ${newUnit}`;
             }
         }
-    
+
         // If no conversion was possible, return the original measurement
         return measurement;
     }
@@ -147,6 +149,44 @@ const RecipeDetails = (props) => {
         return () => unsubscribe();
     }, []);
 
+    // useEffect(() => {
+    //     let unsubscribeSnapshot;
+    //     const unsubscribe = onAuthStateChanged(auth, (user) => {
+    //         if (unsubscribeSnapshot) {
+    //             unsubscribeSnapshot();
+    //         }
+    //         if (user) {
+    //             setCurrentUser(user);
+    //             setIsLoggedIn(true);
+    //             setIsLoading(true);
+    //                 const docRef = doc(db, USERS_REF, user.uid);
+    //                 unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
+    //                 if (docSnap.exists()) {
+    //                     setNickname(docSnap.data().nickname);
+    //                     setIsLoading(false);
+    //                     // checkIfFavourite(user, item);
+    //                 }
+    //                 else {
+    //                     console.log('No such document!');
+    //                     setIsLoading(false);
+    //                 }
+    //             });
+    //         } else {
+    //             setCurrentUser(null);
+    //             setIsLoggedIn(false);
+    //             setIsLoading(false);
+    //         }
+    //     });
+
+    //     // Clean up the listener when the component is unmounted
+    //     return () => {
+    //         unsubscribe();
+    //         if (unsubscribeSnapshot) {
+    //             unsubscribeSnapshot();
+    //         }
+    //     }
+    // }, []);
+
     // useEffect to get meal data
     useEffect(() => {
         getMealData(item.idMeal);
@@ -163,9 +203,9 @@ const RecipeDetails = (props) => {
                 strCategory: meal?.strCategory,
                 strInstructions: meal?.strInstructions,
                 strYouTube: meal?.strYoutube,
-                ingredients: Array.from({length: 20}, (_, i) => ({ 
-                    measure: meal?.[`strMeasure${i+1}`], 
-                    ingredient: meal?.[`strIngredient${i+1}`] 
+                ingredients: Array.from({ length: 20 }, (_, i) => ({
+                    measure: meal?.[`strMeasure${i + 1}`],
+                    ingredient: meal?.[`strIngredient${i + 1}`]
                 })).filter(ingredient => ingredient.measure || ingredient.ingredient)
             });
             setIsFavourite(true);
@@ -201,10 +241,10 @@ const RecipeDetails = (props) => {
                 }
             });
         };
-    
+
         checkIfFavourite();
     }, []);
-    
+
 
     // Function to extract cooking time from instructions
     const extractCookingTime = (instructions) => {
@@ -334,6 +374,80 @@ const RecipeDetails = (props) => {
         return null;
     }
 
+    const [stars, setStars] = useState(0);
+    const [reviews, setReviews] = useState([]);
+    const [review, setReview] = useState('');
+
+    const submitReview = async () => {
+        if (review.trim() === '' || stars === 0) {
+            Alert.alert('Error', 'Please enter a review and rating');
+            return;
+        }
+        try {
+            const querySnapshot = await getDocs(query(collection(db, REVIEWS_REF), where('recipeId', '==', meal?.idMeal), where('userId', '==', auth.currentUser.uid)));
+            if (!querySnapshot.empty) {
+                Alert.alert('Error', 'You have already reviewed this recipe');
+                return;
+            }
+            if (review.trim() !== '' && stars !== 0) {
+                await addDoc(collection(db, REVIEWS_REF), {
+                    recipeId: meal?.idMeal,
+                    stars: stars,
+                    review: review,
+                    user: nickname,
+                    userId: auth.currentUser.uid,
+                    date: new Date().toLocaleString()
+                });
+                setReview('');
+                setStars(0);
+            }
+        } catch (error) {
+            console.error('Error adding review:', error);
+        }
+    }
+
+    const removeReview = async (review) => {
+        try {
+            const querySnapshot = await getDocs(query(collection(db, REVIEWS_REF), where('recipeId', '==', meal?.idMeal), where('userId', '==', auth.currentUser.uid)));
+            if (querySnapshot.empty) {
+                Alert.alert('Error', 'You cannot delete other users reviews');
+                return;
+            }
+            querySnapshot.forEach(async (doc) => {
+                if (doc.data().review === review) {
+                    await deleteDoc(doc.ref);
+                }
+            });
+        } catch (error) {
+            console.error('Error removing review:', error);
+        }
+    }
+
+    useEffect(() => {
+        const reviewsQuery = collection(db, REVIEWS_REF);
+
+        const unsubscribe = onSnapshot(reviewsQuery, (snapshot) => {
+            let reviews = [];
+            snapshot.forEach(doc => {
+                if (doc.data().recipeId === item.idMeal) {
+                    reviews.push(doc.data());
+                }
+            });
+            setReviews(reviews);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    const [averageRating, setAverageRating] = useState(0);
+
+    useEffect(() => {
+        let total = 0;
+        reviews.forEach(review => {
+            total += review.stars;
+        });
+        setAverageRating(total / reviews.length);
+    }, [reviews]);
+
     return (
         <>
             {/* <StatusBar style="light" /> */}
@@ -367,6 +481,15 @@ const RecipeDetails = (props) => {
                             <Text style={styles.mealArea}>{meal?.strArea}</Text>
                         </Animated.View>
                         {/* misc data */}
+
+                        <Animated.View entering={FadeInDown.delay(100).duration(700).springify().damping(12)} style={styles.detailsRow}>
+                        <StarRatingDisplay
+                                rating={averageRating}
+                                color="#000000"
+                                starSize={20}
+                                style={{ paddingVertical: 5 }}
+                            />
+                        </Animated.View>
 
                         {/* can be used if someone figures out formula to check from strInstructions data filtering for each type */}
 
@@ -423,6 +546,60 @@ const RecipeDetails = (props) => {
 
 
                         )}
+                        <View>
+                            {isLoggedIn ?
+                            <>
+                            <Text style={styles.videoTitle}>Leave a review!</Text>
+                            <StarRating
+                                rating={stars}
+                                onChange={setStars}
+                                color="#000000"
+                                starSize={40}
+                                style={{ paddingVertical: 10 }}
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder='Type your review here...'
+                                value={review}
+                                onChangeText={setReview}
+                                multiline={true}
+                            />
+                            <TouchableOpacity style={styles.button} onPress={submitReview}>
+                                <Text style={styles.buttonText}>Submit Review</Text>
+                            </TouchableOpacity>
+                            </>
+                             :
+                             <>
+                            <Text style={styles.videoTitle}>Login to leave a review!</Text>
+                            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
+                                <Text style={styles.buttonText}>Login</Text>
+                            </TouchableOpacity>
+                            </>
+                                }
+                        </View>
+                        <View>
+                            <Text style={styles.videoTitle}>Reviews</Text>
+                            {reviews.map((review, index) => (
+                                <View key={index} style={styles.reviewContainer}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                        <Text style={styles.reviewUser}>{review.user}</Text>
+                                        {auth.currentUser && auth.currentUser.uid === review.userId && (
+                                            <TouchableOpacity onPress={() => removeReview(review.review)}>
+                                                <Text style={{ color: 'red', textAlign: 'right' }}>Delete</Text>
+                                            </TouchableOpacity>
+                                        )}
+                                    </View>
+                                    <StarRatingDisplay
+                                        rating={review.stars}
+                                        color="#000000"
+                                        starSize={20}
+                                        style={{ paddingVertical: 5 }}
+                                    />
+                                    <Text style={styles.reviewText}>{review.review}</Text>
+                                    <Text style={styles.reviewDate}>{review.date}</Text>
+                                </View>
+                            ))}
+                        </View>
                     </View>
                 )}
             </ScrollView>
@@ -542,7 +719,49 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: '#313131ff',
+        marginBottom: 10,
     },
+    input: {
+        borderWidth: 1,
+        borderColor: '#000',
+        padding: 10,
+        marginBottom: 10,
+        borderRadius: 5,
+        backgroundColor: '#fff',
+        minHeight: 150,
+        textAlignVertical: 'top',
+    },
+    button: {
+        backgroundColor: '#007AFF',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        textAlign: 'center',
+    },
+    reviewContainer: {
+        backgroundColor: '#f9f4e2ff',
+        padding: 10,
+        borderRadius: 10,
+        marginBottom: 10,
+        marginTop: 10,
+    },
+    reviewUser: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    reviewText: {
+        fontSize: 14,
+        marginBottom: 5,
+    },
+    reviewDate: {
+        fontSize: 12,
+        color: '#313131ff',
+    }
 });
 
 export default RecipeDetails;
