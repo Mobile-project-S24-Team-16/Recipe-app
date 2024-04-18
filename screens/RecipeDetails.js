@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Linking, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Linking, Dimensions, Alert } from 'react-native';
 import React, { useEffect, useState } from 'react';
 // import { StatusBar } from 'expo-status-bar';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
@@ -56,7 +56,7 @@ const RecipeDetails = (props) => {
             'l': { ratio: 1.05669, newUnit: 'qt' },
             // Add more units as needed
         };
-    
+
         const imperialToMetric = {
             'oz': { ratio: 28.3495, newUnit: 'g' },
             'lb': { ratio: 0.453592, newUnit: 'kg' },
@@ -68,24 +68,24 @@ const RecipeDetails = (props) => {
             'ounces': { ratio: 28.3495, newUnit: 'g' },
             // Add more units as needed
         };
-    
+
         const conversionTable = unit === 'metric' ? imperialToMetric : metricToImperial;
-    
+
         const regex = /(\d+\.?\d*)\s*(\w+)/;
         const match = measurement.match(regex);
-    
+
         if (match) {
             const value = parseFloat(match[1]);
             const originalUnit = match[2];
-    
+
             if (conversionTable[originalUnit]) {
                 const convertedValue = value * conversionTable[originalUnit].ratio;
                 const newUnit = conversionTable[originalUnit].newUnit;
-    
+
                 return `${convertedValue.toFixed(0)} ${newUnit}`;
             }
         }
-    
+
         // If no conversion was possible, return the original measurement
         return measurement;
     }
@@ -140,9 +140,10 @@ const RecipeDetails = (props) => {
                 setCurrentUser(null);
                 setIsLoggedIn(false);
                 setIsLoading(false);
+                unsubscribe();
             }
         });
-    
+
         // Clean up the listener when the component is unmounted
         return () => unsubscribe();
     }, []);
@@ -163,9 +164,9 @@ const RecipeDetails = (props) => {
                 strCategory: meal?.strCategory,
                 strInstructions: meal?.strInstructions,
                 strYouTube: meal?.strYoutube,
-                ingredients: Array.from({length: 20}, (_, i) => ({ 
-                    measure: meal?.[`strMeasure${i+1}`], 
-                    ingredient: meal?.[`strIngredient${i+1}`] 
+                ingredients: Array.from({ length: 20 }, (_, i) => ({
+                    measure: meal?.[`strMeasure${i + 1}`],
+                    ingredient: meal?.[`strIngredient${i + 1}`]
                 })).filter(ingredient => ingredient.measure || ingredient.ingredient)
             });
             setIsFavourite(true);
@@ -201,10 +202,10 @@ const RecipeDetails = (props) => {
                 }
             });
         };
-    
+
         checkIfFavourite();
     }, []);
-    
+
 
     // Function to extract cooking time from instructions
     const extractCookingTime = (instructions) => {
@@ -351,8 +352,14 @@ const RecipeDetails = (props) => {
                     <TouchableOpacity onPress={() => navigation.navigate("Home")}>
                         <ChevronLeftIcon name="chevron-left" size={24} strokeWidth={6.5} color="#fff" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.recipeFavourite} onPress={isFavourite ? removeFromFavorites : addToFavorites}
-                                    disabled={!isLoggedIn}>
+                    <TouchableOpacity style={styles.recipeFavourite} onPress={() => {
+                        if (!isLoggedIn) {
+                            Alert.alert('Please log in to add or remove favorites');
+                        } else {
+                            isFavourite ? removeFromFavorites() : addToFavorites();
+                        }
+                    }}
+                    >
                         <HeartIcon name="heart" size={24} strokeWidth={4.5} color={isFavourite ? "red" : "white"} />
                     </TouchableOpacity>
                 </Animated.View>
