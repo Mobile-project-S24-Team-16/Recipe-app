@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity, Alert, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuid from 'react-native-uuid';
+
+// Get window dimensions
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
 
 // Define a key for AsyncStorage
 const STORAGE_KEY = '@shoppingList';
@@ -170,13 +174,15 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: '#FFC786',
     },
+
     title: {
-        fontSize: 24,
+        fontSize: windowWidth * 0.06,
         fontWeight: 'bold',
         marginBottom: 10,
     },
+
     input: {
-        fontSize: 18,
+        fontSize: windowWidth * 0.045,
         padding: 10,
         borderWidth: 1,
         borderColor: '#ccc',
@@ -184,11 +190,13 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 10,
     },
-    plusIcon: {
-        marginLeft: 325,
-        top: -45,
 
+    plusIcon: {
+        position: 'absolute',
+        right: windowWidth * 0.060,
+        top: windowHeight * 0.095,
     },
+
     listsContainer: {
         flex: 1,
     },
@@ -202,6 +210,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 5,
     },
+
     list: {
         marginBottom: 10,
     },
@@ -213,17 +222,21 @@ const styles = StyleSheet.create({
         borderBottomWidth: 2,
         borderColor: '#ccc',
     },
+
     itemText: {
         fontSize: 16,
     },
+
     iconContainer: {
     },
+     
     deleteAllButton: {
         padding: 10,
         backgroundColor: '#54acffff',
         borderRadius: 12,
         alignItems: 'center',
     },
+     
     deleteAllText: {
         fontSize: 16,
         color: 'white',
