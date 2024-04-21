@@ -20,6 +20,8 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { STORAGE_KEY } from '../components/constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import StarRating, { StarRatingDisplay } from 'react-native-star-rating-widget';
+import * as Speech from 'expo-speech';
+import { FontAwesome } from '@expo/vector-icons';
 // import { List } from 'react-native-paper';
 
 
@@ -29,6 +31,7 @@ const RecipeDetails = (props) => {
 
     const [unit, setUnit] = useState('metric');
 
+    // Get the unit from async storage
     const getUnit = async () => {
         try {
             const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
@@ -40,6 +43,7 @@ const RecipeDetails = (props) => {
         }
     }
 
+    // Get the unit on focus
     useEffect(() => {
         const unsubscribe = props.navigation.addListener('focus', () => {
             getUnit();
@@ -111,6 +115,10 @@ const RecipeDetails = (props) => {
 
     // Navigation hook
     const navigation = useNavigation();
+
+    // Speech states
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [speechText, setSpeechText] = useState('');
 
     // Auth state
     const [currentUser, setCurrentUser] = useState(null);
@@ -375,10 +383,12 @@ const RecipeDetails = (props) => {
         return null;
     }
 
+    // Review states
     const [stars, setStars] = useState(0);
     const [reviews, setReviews] = useState([]);
     const [review, setReview] = useState('');
 
+    // Submit review
     const submitReview = async () => {
         if (review.trim() === '' || stars === 0) {
             Alert.alert('Error', 'Please enter a review and rating');
@@ -407,6 +417,7 @@ const RecipeDetails = (props) => {
         }
     }
 
+    // Remove review
     const removeReview = async (review) => {
         try {
             const querySnapshot = await getDocs(query(collection(db, REVIEWS_REF), where('recipeId', '==', meal?.idMeal), where('userId', '==', auth.currentUser.uid)));
@@ -424,6 +435,7 @@ const RecipeDetails = (props) => {
         }
     }
 
+    // Get reviews
     useEffect(() => {
         const reviewsQuery = collection(db, REVIEWS_REF);
 
@@ -439,8 +451,10 @@ const RecipeDetails = (props) => {
         return () => unsubscribe();
     }, []);
 
+    // Average rating state
     const [averageRating, setAverageRating] = useState(0);
 
+    // Calculate average rating
     useEffect(() => {
         let total = 0;
         reviews.forEach(review => {
@@ -448,6 +462,53 @@ const RecipeDetails = (props) => {
         });
         setAverageRating(total / reviews.length);
     }, [reviews]);
+    
+    // Text-to-Speech function
+    const startSpeech = async () => {
+        if (!meal) {
+            Alert.alert('Error', 'No recipe details found');
+            return;
+        }
+    
+        let speechContent = '';
+    
+        // Read ingredients
+        speechContent += 'Ingredients: ';
+        ingredientsIndexes(meal).forEach(i => {
+            const measure = meal['strMeasure' + i];
+            const ingredient = meal['strIngredient' + i];
+    
+            if (measure && ingredient) {
+                speechContent += convertUnits(measure, unit) + ' ' + ingredient + '. ';
+            }
+        });
+    
+        // Read instructions
+        if (meal.strInstructions) {
+            speechContent += 'Instructions: ' + meal.strInstructions;
+        }
+    
+        // Start speech
+        if (speechContent) {
+            setSpeechText(speechContent);
+            try {
+                await Speech.speak(speechContent, { language: 'en' });
+                setIsPlaying(true);
+            } catch (error) {
+                console.error('Failed to start speech:', error);
+            }
+        }
+    };
+    
+    // Stop text-to-speech function
+    const stopSpeech = async () => {
+        try {
+            await Speech.stop();
+            setIsPlaying(false);
+        } catch (error) {
+            console.error('Failed to stop speech:', error);
+        }
+    };
 
     return (
         <>
@@ -459,6 +520,27 @@ const RecipeDetails = (props) => {
                 {/* Recipe Image */}
                 <View style={styles.recipeDetailContainer}>
                     <Image source={{ uri: item.strMealThumb }} style={styles.recipeImage} sharedTransitionTag={item.strMeal} />
+                </View>
+
+                {/* Text-to-Speech buttons */}
+                <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10 }}>
+                    <Text>Speak ingredients and instructions</Text>
+                    <TouchableOpacity
+                        onPress={() => {
+                            if (!isPlaying) {
+                                startSpeech();
+                            } else {
+                                stopSpeech();
+                            }
+                        }}
+                        style={[styles.playButton, isPlaying && styles.stopButton]}>
+                        <FontAwesome
+                            name={isPlaying ? 'stop-circle' : 'play-circle'}
+                            size={24}
+                            color="white"
+                            style={styles.playIcon}
+                        />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Back button */}
@@ -491,7 +573,7 @@ const RecipeDetails = (props) => {
                         {/* misc data */}
 
                         <Animated.View entering={FadeInDown.delay(100).duration(700).springify().damping(12)} style={styles.detailsRow}>
-                        <StarRatingDisplay
+                            <StarRatingDisplay
                                 rating={averageRating}
                                 color="#000000"
                                 starSize={20}
@@ -549,42 +631,45 @@ const RecipeDetails = (props) => {
                                 <YouTubeIframe
                                     videoId={getYoutubeVideoId(meal.strYoutube)}
                                     height={200}
+                                    autoplay={false}
                                 />
                             </Animated.View>
 
 
                         )}
+                         {/* Rating system */}
                         <View>
                             {isLoggedIn ?
-                            <>
-                            <Text style={styles.videoTitle}>Leave a review!</Text>
-                            <StarRating
-                                rating={stars}
-                                onChange={setStars}
-                                color="#000000"
-                                starSize={40}
-                                style={{ paddingVertical: 10 }}
-                            />
-                            <TextInput
-                                style={styles.input}
-                                placeholder='Type your review here...'
-                                value={review}
-                                onChangeText={setReview}
-                                multiline={true}
-                            />
-                            <TouchableOpacity style={styles.button} onPress={submitReview}>
-                                <Text style={styles.buttonText}>Submit Review</Text>
-                            </TouchableOpacity>
-                            </>
-                             :
-                             <>
-                            <Text style={styles.videoTitle}>Login to leave a review!</Text>
-                            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
-                                <Text style={styles.buttonText}>Login</Text>
-                            </TouchableOpacity>
-                            </>
-                                }
+                                <>
+                                    <Text style={styles.videoTitle}>Leave a review!</Text>
+                                    <StarRating
+                                        rating={stars}
+                                        onChange={setStars}
+                                        color="#000000"
+                                        starSize={40}
+                                        style={{ paddingVertical: 10 }}
+                                    />
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder='Type your review here...'
+                                        value={review}
+                                        onChangeText={setReview}
+                                        multiline={true}
+                                    />
+                                    <TouchableOpacity style={styles.button} onPress={submitReview}>
+                                        <Text style={styles.buttonText}>Submit Review</Text>
+                                    </TouchableOpacity>
+                                </>
+                                :
+                                <>
+                                    <Text style={styles.videoTitle}>Login to leave a review!</Text>
+                                    <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Login')}>
+                                        <Text style={styles.buttonText}>Login</Text>
+                                    </TouchableOpacity>
+                                </>
+                            }
                         </View>
+                       
                         <View>
                             <Text style={styles.videoTitle}>Reviews</Text>
                             {reviews.map((review, index) => (
@@ -597,6 +682,7 @@ const RecipeDetails = (props) => {
                                             </TouchableOpacity>
                                         )}
                                     </View>
+
                                     <StarRatingDisplay
                                         rating={review.stars}
                                         color="#000000"
@@ -769,7 +855,22 @@ const styles = StyleSheet.create({
     reviewDate: {
         fontSize: 12,
         color: '#313131ff',
-    }
+    },
+    playButton: {
+        backgroundColor: '#007AFF',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    stopButton: {
+        backgroundColor: 'red',
+    },
+    playIcon: {
+        paddingHorizontal: 5,
+    },
 });
 
 export default RecipeDetails;
