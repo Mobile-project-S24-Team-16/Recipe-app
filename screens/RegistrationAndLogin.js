@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: '#FFC786',
     },
     logoContainer: {
         marginBottom: 30,
@@ -51,13 +51,14 @@ const styles = StyleSheet.create({
         width: '80%',
         marginVertical: 10,
         paddingVertical: 15,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: '#2596ff',
         borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
     },
     buttonText: {
         fontSize: 18,
+        color: '#ffffff',
     },
     skipButton: {
         marginTop: 50,
