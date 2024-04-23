@@ -116,10 +116,6 @@ const RecipeDetails = (props) => {
     // Navigation hook
     const navigation = useNavigation();
 
-    // Speech states
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [speechText, setSpeechText] = useState('');
-
     // Auth state
     const [currentUser, setCurrentUser] = useState(null);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -218,8 +214,10 @@ const RecipeDetails = (props) => {
                 })).filter(ingredient => ingredient.measure || ingredient.ingredient)
             });
             setIsFavourite(true);
+            Alert.alert('Success', 'Recipe added to favorites');
         } catch (error) {
             console.error('Error adding to favorites:', error);
+            Alert.alert('Error', 'Failed to add recipe to favorites.');
         }
     };
 
@@ -232,10 +230,12 @@ const RecipeDetails = (props) => {
                 if (doc.data().recipeId === item.idMeal) {
                     await deleteDoc(doc.ref);
                     setIsFavourite(false);
+                    Alert.alert('Success', 'Recipe removed from favorites!');
                 }
             });
         } catch (error) {
             console.error('Error removing from favorites:', error);
+            Alert.alert('Error', 'Failed to remove recipe from favorites.');
         }
     };
 
@@ -462,51 +462,72 @@ const RecipeDetails = (props) => {
         });
         setAverageRating(total / reviews.length);
     }, [reviews]);
+
+    // Text-To-Speech states
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [speechText, setSpeechText] = useState('');
+    const [isPaused, setIsPaused] = useState(false);
+    //const [speechIndex, setSpeechIndex] = useState(0);
     
-    // Text-to-Speech function
+    // Split speechContent into sentences
+    let speechArray = [];
+    let speechIndex = 0;
+
     const startSpeech = async () => {
         if (!meal) {
             Alert.alert('Error', 'No recipe details found');
             return;
         }
     
-        let speechContent = '';
+        // Only prepare the speech content if it's the first time starting the speech
+        if (speechIndex === 0) {
+            let speechContent = '';
     
-        // Read ingredients
-        speechContent += 'Ingredients: ';
-        ingredientsIndexes(meal).forEach(i => {
-            const measure = meal['strMeasure' + i];
-            const ingredient = meal['strIngredient' + i];
+            // Read ingredients
+            speechContent += 'Ingredients: ';
+            ingredientsIndexes(meal).forEach(i => {
+                const measure = meal['strMeasure' + i];
+                const ingredient = meal['strIngredient' + i];
     
-            if (measure && ingredient) {
-                speechContent += convertUnits(measure, unit) + ' ' + ingredient + '. ';
+                if (measure && ingredient) {
+                    speechContent += convertUnits(measure, unit) + ' ' + ingredient + '. ';
+                }
+            });
+    
+            // Read instructions
+            if (meal.strInstructions) {
+                speechContent += 'Instructions: ' + meal.strInstructions;
             }
-        });
     
-        // Read instructions
-        if (meal.strInstructions) {
-            speechContent += 'Instructions: ' + meal.strInstructions;
+            // Split speechContent into sentences
+            speechArray = speechContent.split('. ');
         }
     
-        // Start speech
-        if (speechContent) {
-            setSpeechText(speechContent);
+        // Start speech from current index
+        if (speechArray[speechIndex]) {
             try {
-                await Speech.speak(speechContent, { language: 'en' });
+                await Speech.speak(speechArray[speechIndex], { language: 'en', onDone: () => {
+                    if (speechIndex < speechArray.length - 1) {
+                        speechIndex++;
+                        startSpeech();
+                    } else {
+                        setIsPlaying(false);
+                    }
+                }});
                 setIsPlaying(true);
             } catch (error) {
                 console.error('Failed to start speech:', error);
             }
         }
     };
-    
-    // Stop text-to-speech function
-    const stopSpeech = async () => {
+
+    // Pause text-to-speech function
+    const pauseSpeech = async () => {
         try {
             await Speech.stop();
             setIsPlaying(false);
         } catch (error) {
-            console.error('Failed to stop speech:', error);
+            console.error('Failed to pause speech:', error);
         }
     };
 
@@ -524,18 +545,22 @@ const RecipeDetails = (props) => {
 
                 {/* Text-to-Speech buttons */}
                 <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10 }}>
-                    <Text>Speak ingredients and instructions</Text>
+                    <Text style={styles.speechText}>Speak recipe text</Text>
                     <TouchableOpacity
                         onPress={() => {
-                            if (!isPlaying) {
+                            if (!isPlaying && !isPaused) {
                                 startSpeech();
-                            } else {
-                                stopSpeech();
+                            } else if (isPlaying) {
+                                pauseSpeech();
+                                setIsPaused(true);
+                            } else if (isPaused) {
+                                startSpeech();
+                                setIsPaused(false);
                             }
                         }}
-                        style={[styles.playButton, isPlaying && styles.stopButton]}>
+                        style={styles.playButton}>
                         <FontAwesome
-                            name={isPlaying ? 'stop-circle' : 'play-circle'}
+                            name={!isPlaying && !isPaused ? 'play-circle' : 'pause-circle'}
                             size={24}
                             color="white"
                             style={styles.playIcon}
@@ -637,7 +662,7 @@ const RecipeDetails = (props) => {
 
 
                         )}
-                         {/* Rating system */}
+                        {/* Rating system */}
                         <View>
                             {isLoggedIn ?
                                 <>
@@ -669,7 +694,7 @@ const RecipeDetails = (props) => {
                                 </>
                             }
                         </View>
-                       
+
                         <View>
                             <Text style={styles.videoTitle}>Reviews</Text>
                             {reviews.map((review, index) => (
@@ -865,8 +890,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 20,
     },
-    stopButton: {
-        backgroundColor: 'red',
+    pauseButton: {
+        backgroundColor: 'orange',
+        padding: 10,
+        borderRadius: 50,
+        margin: 10,
+    },
+    speechText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        padding: 10,
+        marginTop: 10,
     },
     playIcon: {
         paddingHorizontal: 5,
