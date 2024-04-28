@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useState, useEffect } from 'react';
 import { db, USERS_REF, RECIPES_REF } from '../firebase/Config';
+import { RadioButton } from 'react-native-paper';
 import { auth } from '../firebase/Config';
 import {
     collection,
@@ -12,7 +13,7 @@ const AddRecipe = () => {
 
     const [recipeName, setRecipeName] = useState('');
     const [prepareTime, setPrepareTime] = useState('');
-    const [difficulty, setDifficulty] = useState('');
+    const [difficulty, setDifficulty] = useState('Easy');
     const [ingredients, setIngredients] = useState('');
     const [instructions, setInstructions] = useState('');
 
@@ -52,9 +53,15 @@ const AddRecipe = () => {
                 <Text style={styles.title}>Prepare time</Text>
                 <TextInput inputMode='numeric' value={prepareTime} onChangeText={setPrepareTime} style={styles.input} placeholder="Enter prepare time (min.)" />
                 <Text style={styles.title}>Difficulty</Text>
-                <TextInput style={styles.input} value={difficulty} onChangeText={setDifficulty} placeholder="Enter difficulty" />
+                <RadioButton.Group onValueChange={setDifficulty} value={difficulty}>
+                    <View style={styles.radioBackground}>
+                    <RadioButton.Item label="Easy" value="Easy" />
+                    <RadioButton.Item label="Medium" value="Medium" />
+                    <RadioButton.Item label="Hard" value="Hard" />
+                    </View>
+                </RadioButton.Group>
                 <Text style={styles.title}>Ingredients</Text>
-                <TextInput style={styles.input} value={ingredients} onChangeText={setIngredients} placeholder="Enter each ingredient on a new line" multiline />
+                <TextInput style={styles.input} value={ingredients} onChangeText={setIngredients} placeholder={"Enter each ingredient on a new line \n - Ingredient 1 \n - Ingredient 2 \n ..."} multiline />
                 <Text style={styles.title}>Instructions</Text>
                 <TextInput style={styles.input} value={instructions} onChangeText={setInstructions} placeholder="Enter instructions" multiline />
                 <TouchableOpacity style={styles.button} onPress={addRecipe}>
@@ -79,6 +86,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         backgroundColor: '#FFF',
         borderRadius: 5,
+        textAlignVertical: 'top',
     },
     title: {
         fontSize: 16,
@@ -97,6 +105,12 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 16,
         textAlign: 'center',
+    },
+    radioBackground: {
+        backgroundColor: '#FFF',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 10,
     },
 });
 
