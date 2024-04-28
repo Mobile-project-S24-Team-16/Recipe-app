@@ -40,7 +40,7 @@ const AddRecipe = () => {
         }
         setRecipeName('');
         setPrepareTime('');
-        setDifficulty('');
+        setDifficulty('Easy');
         setIngredients('');
         setInstructions('');
     }
