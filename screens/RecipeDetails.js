@@ -468,7 +468,7 @@ const RecipeDetails = (props) => {
     const [speechText, setSpeechText] = useState('');
     const [isPaused, setIsPaused] = useState(false);
     //const [speechIndex, setSpeechIndex] = useState(0);
-    
+
     // Split speechContent into sentences
     let speechArray = [];
     let speechIndex = 0;
@@ -478,42 +478,44 @@ const RecipeDetails = (props) => {
             Alert.alert('Error', 'No recipe details found');
             return;
         }
-    
+
         // Only prepare the speech content if it's the first time starting the speech
         if (speechIndex === 0) {
             let speechContent = '';
-    
+
             // Read ingredients
             speechContent += 'Ingredients: ';
             ingredientsIndexes(meal).forEach(i => {
                 const measure = meal['strMeasure' + i];
                 const ingredient = meal['strIngredient' + i];
-    
+
                 if (measure && ingredient) {
                     speechContent += convertUnits(measure, unit) + ' ' + ingredient + '. ';
                 }
             });
-    
+
             // Read instructions
             if (meal.strInstructions) {
                 speechContent += 'Instructions: ' + meal.strInstructions;
             }
-    
+
             // Split speechContent into sentences
             speechArray = speechContent.split('. ');
         }
-    
+
         // Start speech from current index
         if (speechArray[speechIndex]) {
             try {
-                await Speech.speak(speechArray[speechIndex], { language: 'en', onDone: () => {
-                    if (speechIndex < speechArray.length - 1) {
-                        speechIndex++;
-                        startSpeech();
-                    } else {
-                        setIsPlaying(false);
+                await Speech.speak(speechArray[speechIndex], {
+                    language: 'en', onDone: () => {
+                        if (speechIndex < speechArray.length - 1) {
+                            speechIndex++;
+                            startSpeech();
+                        } else {
+                            setIsPlaying(false);
+                        }
                     }
-                }});
+                });
                 setIsPlaying(true);
             } catch (error) {
                 console.error('Failed to start speech:', error);
@@ -573,15 +575,17 @@ const RecipeDetails = (props) => {
                     <TouchableOpacity onPress={() => navigation.navigate("Home")}>
                         <ChevronLeftIcon name="chevron-left" size={24} strokeWidth={6.5} color="#fff" />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.recipeFavourite} onPress={() => {
-                        if (!isLoggedIn) {
-                            Alert.alert('Please log in to add or remove favorites');
-                        } else {
-                            isFavourite ? removeFromFavorites() : addToFavorites();
-                        }
-                    }}
+                    <TouchableOpacity
+                        style={[styles.recipeFavourite, { marginLeft: 300, position: 'absolute' }]}
+                        onPress={() => {
+                            if (!isLoggedIn) {
+                                Alert.alert('Please log in to add or remove favorites');
+                            } else {
+                                isFavourite ? removeFromFavorites() : addToFavorites();
+                            }
+                        }}
                     >
-                        <HeartIcon name="heart" size={24} strokeWidth={4.5} color={isFavourite ? "red" : "white"} />
+                        <HeartIcon name="heart" size={28} strokeWidth={4.5} color={isFavourite ? "red" : "white"} />
                     </TouchableOpacity>
                 </Animated.View>
 
@@ -759,7 +763,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         marginLeft: 5,
         justifyContent: 'space-between',
-        backgroundColor: 'rgba(55, 154, 220, 0.998)',
+        backgroundColor: 'rgba(40, 132, 193, 0.998)',
         padding: 10,
         borderRadius: 20,
     },
