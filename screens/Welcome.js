@@ -1,4 +1,4 @@
-import { Button, Text, View, Image, SafeAreaView } from 'react-native';
+import { Button, Text, View, Image, SafeAreaView, TouchableOpacity } from 'react-native';
 import React from 'react';
 import Animated, { useAnimatedStyle, withRepeat, interpolate, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -51,19 +51,39 @@ const Welcome = ({ navigation }) => {
                     fontWeight: 600,
                     color: "#012636",
                     textAlign: "center",
-                    paddingBottom: 50
+                    paddingBottom: 25
                 }}
                 >
                     Welcome to our app!
                 </Text>
+                <Text style={{
+                    fontSize: 18,
+                    color: "#012636",
+                    textAlign: "center",
+                    paddingBottom: 25
+                }}
+                >
+                    In this app you can find many different recipes, save your favorite ones, use the shopping list feature to help with shopping, and even add your own recipes!
+                </Text>
                 <View>
-                    <Button
-                        title="Get started"
-                        onPress={() => navigation.navigate("RegistrationAndLogin")}
+                    <TouchableOpacity
                         style={{
-                            width: "100%",
+                            backgroundColor: "#007AFF",
+                            padding: 10,
+                            borderRadius: 5,
+                            width: 200,
                         }}
-                    />
+                        onPress={() => navigation.navigate('RegistrationAndLogin')}
+                    >
+                        <Text style={{
+                            color: "#FFF",
+                            fontSize: 16,
+                            textAlign: "center",
+                        }}
+                        >
+                            Get started
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </SafeAreaView>
