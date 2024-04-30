@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { useState, useEffect } from 'react';
 import { db, USERS_REF, RECIPES_REF } from '../firebase/Config';
 import { RadioButton } from 'react-native-paper';
@@ -8,6 +8,9 @@ import {
     addDoc,
     doc
 } from "firebase/firestore";
+import * as ImagePicker from 'expo-image-picker';
+import { storage } from '../firebase/Config';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const AddRecipe = () => {
 
@@ -16,7 +19,55 @@ const AddRecipe = () => {
     const [difficulty, setDifficulty] = useState('Easy');
     const [ingredients, setIngredients] = useState('');
     const [instructions, setInstructions] = useState('');
+    const [image, setImage] = useState(null);
 
+    const handleAddImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            alert('Sorry, we need camera roll permissions to make this work!');
+            return;
+        }
+    
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        console.log(result);
+    
+        if (!result.cancelled) {
+            setImage(result.assets[0].uri);
+        }
+    }
+
+    const uploadImage = async () => {
+        const storageRef = ref(storage, `images/${auth.currentUser.uid}/${recipeName.replace(/\s/g, '-')}`);
+    
+        const response = await fetch(image);
+        const blob = await response.blob();
+    
+        const uploadTask = uploadBytesResumable(storageRef, blob);
+    
+        return new Promise((resolve, reject) => {
+            uploadTask.on('state_changed', 
+                (snapshot) => {
+                    console.log('Upload progress:', snapshot.bytesTransferred / snapshot.totalBytes * 100 + '%');
+                }, 
+                (error) => {
+                    console.error('Error uploading file', error);
+                    reject(error);
+                }, 
+                async () => {
+                    const imageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                    console.log('Image URL:', imageUrl);
+                    resolve(imageUrl);
+                }
+            );
+        });
+    }
+    
     const addRecipe = async () => {
         if (!recipeName || !prepareTime || !difficulty || !ingredients || !instructions) {
             alert('Please fill in all fields');
@@ -24,6 +75,10 @@ const AddRecipe = () => {
         }
         try {
             const user = auth.currentUser;
+            let imageUrl = null;
+            if (image) {
+                imageUrl = await uploadImage();
+            }
             const recipe = {
                 recipeName,
                 prepareTime,
@@ -31,6 +86,7 @@ const AddRecipe = () => {
                 ingredients,
                 instructions,
                 userId: user.uid,
+                image: imageUrl,
             }
             const docRef = await addDoc(collection(db, USERS_REF, auth.currentUser.uid, RECIPES_REF), recipe);
             console.log('Recipe added successfully', docRef.id);
@@ -43,6 +99,7 @@ const AddRecipe = () => {
         setDifficulty('Easy');
         setIngredients('');
         setInstructions('');
+        setImage(null);
     }
 
     return (
@@ -64,6 +121,10 @@ const AddRecipe = () => {
                 <TextInput style={styles.input} value={ingredients} onChangeText={setIngredients} placeholder={"Enter each ingredient on a new line \n - Ingredient 1 \n - Ingredient 2 \n ..."} multiline />
                 <Text style={styles.title}>Instructions</Text>
                 <TextInput style={styles.input} value={instructions} onChangeText={setInstructions} placeholder="Enter instructions" multiline />
+                {image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
+                <TouchableOpacity style={styles.button} onPress={handleAddImage}>
+                    <Text style={styles.buttonText}>Add image</Text>
+                </TouchableOpacity>
                 <TouchableOpacity style={styles.button} onPress={addRecipe}>
                     <Text style={styles.buttonText}>Add recipe</Text>
                 </TouchableOpacity>

@@ -1,8 +1,10 @@
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Alert, Image } from 'react-native';
 import { useState, useEffect } from 'react';
 import { db, USERS_REF, RECIPES_REF } from '../firebase/Config';
 import { auth } from '../firebase/Config';
-import { doc, collection, getDocs, onSnapshot, deleteDoc, updateDoc } from 'firebase/firestore';
+import { doc, collection, getDoc, onSnapshot, deleteDoc, updateDoc } from 'firebase/firestore';
+import { storage } from '../firebase/Config';
+import { getDownloadURL, ref, deleteObject } from 'firebase/storage';
 
 
 const CreatedRecipes = () => {
@@ -19,6 +21,17 @@ const CreatedRecipes = () => {
                         id: doc.id,
                         ...doc.data()
                     });
+                    if (doc.data().image) {
+                        getDownloadURL(ref(storage, doc.data().image))
+                            .then((url) => {
+                                setRecipes((recipes) => recipes.map(recipe => 
+                                    recipe.id === doc.id ? { ...recipe, imageUrl: url } : recipe
+                                ));
+                            })
+                            .catch((error) => {
+                                console.error('Error getting image URL:', error);
+                            });
+                        }
                 }
             }
             );
@@ -44,7 +57,18 @@ const CreatedRecipes = () => {
                 {
                     text: 'Delete',
                     onPress: async () => {
-                        await deleteDoc(doc(db, USERS_REF, auth.currentUser.uid, RECIPES_REF, id));
+                        const docRef = doc(db, USERS_REF, auth.currentUser.uid, RECIPES_REF, id);
+                        const docSnap = await getDoc(docRef);
+    
+                        if (docSnap.exists()) {
+                            const recipeData = docSnap.data();
+                            if (recipeData.image) {
+                                const storageRef = ref(storage, recipeData.image);
+                                await deleteObject(storageRef);
+                            }
+                        }
+    
+                        await deleteDoc(docRef);
                     }
                 }
             ]
@@ -70,6 +94,7 @@ const CreatedRecipes = () => {
     }
 
     return (
+        <View style={{flex: 1, backgroundColor: '#FFC786'}}>
         <ScrollView>
             <View style={styles.container}>
                 <Text style={styles.header}>My recipes</Text>
@@ -80,6 +105,9 @@ const CreatedRecipes = () => {
                            value={recipe.recipeName}
                            onChangeText={(value) => handleInputChange(recipe.id, 'recipeName', value)}
                         />
+                        <View style={styles.imageContainer}>
+                        {recipe.imageUrl && <Image source={{ uri: recipe.imageUrl }} style={{ width: 200, height: 200, borderRadius: 10 }} />}
+                        </View>
                         <View style={styles.timeDifficulty}>
                             <Text style={styles.detailHeader}>Prepare time:</Text>
                             <TextInput
@@ -112,7 +140,7 @@ const CreatedRecipes = () => {
                             multiline
                         />
                         <TouchableOpacity onPress={() => handleEditRecipe(recipe.id, recipe)} style={styles.button}>
-                            <Text style={styles.editText}>Save edit</Text>
+                            <Text style={styles.editText}>Save changes</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => handleDeleteRecipe(recipe.id, recipe)} style={styles.button}>
                             <Text style={styles.deleteText}>Delete recipe</Text>
@@ -121,6 +149,7 @@ const CreatedRecipes = () => {
                 ))}
             </View>
         </ScrollView>
+        </View>
     );
 }
 
@@ -142,7 +171,7 @@ const styles = StyleSheet.create({
         width: '100%',
         padding: 10,
         borderRadius: 5,
-        alignItems: 'flex-start'
+        // alignItems: 'flex-start'
     },  
     detailHeader: {
         fontSize: 16,
@@ -179,7 +208,12 @@ const styles = StyleSheet.create({
     button: {
         alignSelf: 'flex-end',
         marginBottom: 5
-    }
+    },
+    imageContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+    },  
 });
 
 export default CreatedRecipes;
