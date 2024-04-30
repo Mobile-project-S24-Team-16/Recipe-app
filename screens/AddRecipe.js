@@ -112,9 +112,9 @@ const AddRecipe = () => {
                 <Text style={styles.title}>Difficulty</Text>
                 <RadioButton.Group onValueChange={setDifficulty} value={difficulty}>
                     <View style={styles.radioBackground}>
-                    <RadioButton.Item label="Easy" value="Easy" />
-                    <RadioButton.Item label="Medium" value="Medium" />
-                    <RadioButton.Item label="Hard" value="Hard" />
+                    <RadioButton.Item color='#007AFF' label="Easy" value="Easy" />
+                    <RadioButton.Item color='#007AFF' label="Medium" value="Medium" />
+                    <RadioButton.Item color='#007AFF' label="Hard" value="Hard" />
                     </View>
                 </RadioButton.Group>
                 <Text style={styles.title}>Ingredients</Text>

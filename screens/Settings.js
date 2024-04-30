@@ -174,6 +174,7 @@ const Settings = ({ navigation }) => {
                             <Text style={styles.headerText}>Change email</Text>
                             <TextInput
                                 placeholder='New Email'
+                                keyboardType='email-address'
                                 style={styles.input}
                                 value={email}
                                 onChangeText={(email) => setEmail(email)}
@@ -202,12 +203,14 @@ const Settings = ({ navigation }) => {
                             <Text style={styles.headerText}>Change units</Text>
                             <RadioButton.Group onValueChange={newUnit => setUnit(newUnit)} value={unit}>
                                 <View style={styles.radioButtonContainer}>
+                                    <View style={styles.radioOption}>
                                     <Text>Metric</Text>
-                                    <RadioButton value='metric' />
-                                </View>
-                                <View style={styles.radioButtonContainer}>
+                                    <RadioButton color='#007AFF' value='metric' />
+                                    </View>
+                                    <View style={styles.radioOption}>
                                     <Text>Imperial</Text>
-                                    <RadioButton value='imperial' />
+                                    <RadioButton color='#007AFF' value='imperial' />
+                                    </View>
                                 </View>
                             </RadioButton.Group>
                             <TouchableOpacity style={styles.deleteButton}>
@@ -277,6 +280,14 @@ const Settings = ({ navigation }) => {
                 backgroundColor: '#FFFFFF',
             },
             radioButtonContainer: {
+                backgroundColor: '#FFFFFF',
+                padding: 10,
+                width: 200,
+                borderRadius: 5,
+                justifyContent: 'space-between',
+                alignItems: 'center',
+            },
+            radioOption: {
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'center',

@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   inputContainer: {
+    width: '100%',
     marginBottom: 20,
   },
   label: {
