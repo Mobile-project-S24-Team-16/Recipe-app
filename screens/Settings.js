@@ -4,7 +4,7 @@ import { RadioButton } from 'react-native-paper';
 import { useState, useEffect } from 'react';
 import { auth, db, USERS_REF } from '../firebase/Config';
 import { doc, collection, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
-import { changePassword, changeEmail, reauthenticate } from '../components/Auth';
+import { changePassword, changeEmail, reauthenticate, removeUser } from '../components/Auth';
 import { onAuthStateChanged } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEY } from '../components/constants';
@@ -157,6 +157,35 @@ const Settings = ({ navigation }) => {
         }
     }
 
+    const handleDeleteAccount = async () => {
+        Alert.alert(
+            'Delete account',
+            'Are you sure you want to delete your account?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Delete',
+                    onPress: async () => {
+                       try {
+                        await removeUser();
+                        navigation.navigate('Login');
+                    } catch (error) {
+                        if (error.message.includes('auth/requires-recent-login')) {
+                            setModalVisible(true);
+                        }
+                        else {
+                            console.log('Account deletion failed: ', error.message);
+                        }
+                    }
+                }
+            }
+            ]
+        );
+    }
+
             return (
                 <>
                     <ScrollView>
@@ -213,7 +242,7 @@ const Settings = ({ navigation }) => {
                                     </View>
                                 </View>
                             </RadioButton.Group>
-                            <TouchableOpacity style={styles.deleteButton}>
+                            <TouchableOpacity onPress={handleDeleteAccount} style={styles.deleteButton}>
                                 <Text style={styles.buttonText}>DELETE ACCOUNT</Text>
                             </TouchableOpacity>
                         </View>
