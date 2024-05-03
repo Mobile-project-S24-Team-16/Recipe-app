@@ -141,11 +141,11 @@ const Home = () => {
                     ) : (
                         <Text style={{ textAlign: 'center' }}>{isLoading ? 'Loading recipes...' : ''}</Text>
                     )}
-                    {meals && meals.length > 0 && ( // Only show button if recipes are displayed
+                    {/* {meals && meals.length > 0 && ( // Only show button if recipes are displayed
                         <View style={styles.backButtonContainer}>
                             <Button style={styles.backButton} title="Back" onPress={() => navigation.navigate('Home')} />
                         </View>
-                    )}
+                    )} */}
                 </View>
             </ScrollView>
         </SafeAreaView>
