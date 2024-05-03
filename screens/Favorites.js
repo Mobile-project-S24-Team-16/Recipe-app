@@ -136,6 +136,7 @@ const Favorites = ({ recipeId }) => {
                     mode="contained"
                     onPress={() => removeFromFavorites(item.recipeId)}
                     style={styles.button}
+                    buttonColor='red'
                 >
                     Remove
                 </Button>
