@@ -115,7 +115,7 @@ const CreatedRecipes = () => {
                                 value={recipe.prepareTime}
                                 onChangeText={(value) => handleInputChange(recipe.id, 'prepareTime', value)}
                             />
-                            <Text> min.</Text>
+                            <Text>min.</Text>
                         </View>
                         <View style={styles.timeDifficulty}>
                             <Text style={styles.detailHeader}>Difficulty:</Text>
