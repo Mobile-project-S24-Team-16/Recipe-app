@@ -91,7 +91,7 @@ const HomeStack = () => {
     <Tab.Navigator>
 
       <Tab.Screen
-        name="HomeTab"
+        name="Home Tab"
         component={Home}
         options={{
           // mahdollisesti väliaikaisesti pois käytöstä
@@ -113,7 +113,7 @@ const HomeStack = () => {
         }}
       />
       <Tab.Screen
-        name="MyAccountTab"
+        name="My Account Tab"
         component={MyAccount}
         options={{
           // mahdollisesti väliaikaisesti pois käytöstä

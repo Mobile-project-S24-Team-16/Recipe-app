@@ -576,7 +576,7 @@ const RecipeDetails = (props) => {
                         <ChevronLeftIcon name="chevron-left" size={24} strokeWidth={6.5} color="#fff" />
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={[styles.recipeFavourite, { marginLeft: 300, position: 'absolute' }]}
+                        style={[styles.recipeFavourite, { marginLeft: 280, position: 'absolute', marginTop: -50 }]}
                         onPress={() => {
                             if (!isLoggedIn) {
                                 Alert.alert('Please log in to add or remove favorites');

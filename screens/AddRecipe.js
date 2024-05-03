@@ -11,6 +11,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { storage } from '../firebase/Config';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const AddRecipe = () => {
 
@@ -123,9 +124,11 @@ const AddRecipe = () => {
                 <TextInput style={styles.input} value={instructions} onChangeText={setInstructions} placeholder="Enter instructions" multiline />
                 {image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
                 <TouchableOpacity style={styles.button} onPress={handleAddImage}>
-                    <Text style={styles.buttonText}>Add image</Text>
+                    <MaterialCommunityIcons style={{marginRight: 5, marginLeft: -5}} name="image-plus" size={24} color="white" />
+                    <Text style={[styles.buttonText]}>Add image</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.button} onPress={addRecipe}>
+                    <MaterialCommunityIcons style={{marginRight: 5, marginLeft: -5}} name="plus" size={24} color="white" />
                     <Text style={styles.buttonText}>Add recipe</Text>
                 </TouchableOpacity>
             </View>
@@ -161,6 +164,9 @@ const styles = StyleSheet.create({
         width: '100%',
         marginBottom: 10,
         marginTop: 10,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     buttonText: {
         color: '#FFF',
