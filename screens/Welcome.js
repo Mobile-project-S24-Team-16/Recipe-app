@@ -51,7 +51,7 @@ const Welcome = ({ navigation }) => {
                         paddingBottom: 25
                     }}
                     >
-                        Welcome to our app!
+                        Welcome to Food Wonders!
                     </Text>
                     <Text style={{
                         fontSize: 18,
