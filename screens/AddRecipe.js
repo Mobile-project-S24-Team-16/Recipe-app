@@ -22,13 +22,15 @@ const AddRecipe = () => {
     const [instructions, setInstructions] = useState('');
     const [image, setImage] = useState(null);
 
+    // Request permission to access the camera roll
     const handleAddImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
             alert('Sorry, we need camera roll permissions to make this work!');
             return;
         }
-    
+
+        // Launch the image library
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
             allowsEditing: true,
@@ -38,19 +40,24 @@ const AddRecipe = () => {
 
         console.log(result);
     
+        // Set the image if the user selected one
         if (!result.cancelled) {
             setImage(result.assets[0].uri);
         }
     }
 
+    // Upload image to Firebase Storage
     const uploadImage = async () => {
         const storageRef = ref(storage, `images/${auth.currentUser.uid}/${recipeName.replace(/\s/g, '-')}`);
     
+        // Fetch the image data
         const response = await fetch(image);
         const blob = await response.blob();
     
+        // Upload the image
         const uploadTask = uploadBytesResumable(storageRef, blob);
-    
+
+        // Return a promise that resolves when the image is uploaded
         return new Promise((resolve, reject) => {
             uploadTask.on('state_changed', 
                 (snapshot) => {
@@ -69,6 +76,7 @@ const AddRecipe = () => {
         });
     }
     
+    // Add recipe to Firestore
     const addRecipe = async () => {
         if (!recipeName || !prepareTime || !difficulty || !ingredients || !instructions) {
             alert('Please fill in all fields');
@@ -77,9 +85,13 @@ const AddRecipe = () => {
         try {
             const user = auth.currentUser;
             let imageUrl = null;
+
+            // Upload the image if the user selected one
             if (image) {
                 imageUrl = await uploadImage();
             }
+
+            // Add the recipe to Firestore
             const recipe = {
                 recipeName,
                 prepareTime,

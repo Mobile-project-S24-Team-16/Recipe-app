@@ -20,6 +20,7 @@ const Settings = ({ navigation }) => {
     const [confirmedPassword, setConfirmedPassword] = useState('');
     const [modalVisible, setModalVisible] = useState(false);
 
+    // Save unit to AsyncStorage
     const saveUnit = async (newUnit) => {
         try {
             const jsonValue = JSON.stringify(newUnit);
@@ -29,6 +30,7 @@ const Settings = ({ navigation }) => {
         }
     }
 
+    // Load unit from AsyncStorage
     const loadUnit = async () => {
         try {
             const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
@@ -49,6 +51,7 @@ const Settings = ({ navigation }) => {
         saveUnit(unit);
     }, [unit]);
 
+    // Fetch user data from Firestore in real-time
     useEffect(() => {
         let unsubscribeSnapshot;
         const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -76,6 +79,7 @@ const Settings = ({ navigation }) => {
         }
     }, []);
 
+    // Update nickname in Firestore
     const handleChangeNickname = async () => {
         if (!nickname) {
             Alert.alert('Nickname field is empty');
@@ -96,6 +100,7 @@ const Settings = ({ navigation }) => {
         }
     }
 
+    // Update email in Firestore
     const handleChangeEmail = async () => {
         if (!email) {
             Alert.alert('Email field is empty');
@@ -116,6 +121,7 @@ const Settings = ({ navigation }) => {
         }
     }
 
+    // Reauthenticate user if necessary
     const handleReauthenticate = async () => {
         try {
             await reauthenticate(password);
@@ -130,6 +136,7 @@ const Settings = ({ navigation }) => {
         }
     }
 
+    // Update password in Firestore
     const handleChangePassword = async () => {
         if (!password) {
             Alert.alert('Password field is empty');
@@ -157,6 +164,7 @@ const Settings = ({ navigation }) => {
         }
     }
 
+    // Delete user account
     const handleDeleteAccount = async () => {
         Alert.alert(
             'Delete account',

@@ -12,6 +12,7 @@ const CreatedRecipes = () => {
     const [recipes, setRecipes] = useState([]);
     const [editedRecipes, setEditedRecipes] = useState([]);
 
+    // Fetch recipes from Firestore in real-time
     useEffect(() => {
         const unsubscribe = onSnapshot(collection(db, USERS_REF, auth.currentUser.uid, RECIPES_REF), (querySnapshot) => {
             const recipes = [];
@@ -41,10 +42,12 @@ const CreatedRecipes = () => {
         return () => unsubscribe();
     }, []);
 
+    // Copy the recipes to the editedRecipes state
     useEffect(() => {
         setEditedRecipes(recipes);
     }, [recipes]);
 
+    // Delete recipe from Firestore
     const handleDeleteRecipe = async (id) => {
         Alert.alert(
             'Delete recipe',
@@ -75,12 +78,14 @@ const CreatedRecipes = () => {
         );
     }
 
+    // Update the editedRecipes state when the user changes the input fields
     const handleInputChange = (id, field, value) => {
         setEditedRecipes(editedRecipes.map(recipe => 
             recipe.id === id ? { ...recipe, [field]: value } : recipe
         ));
     }       
 
+    // Update the recipe in Firestore
     const handleEditRecipe = async (id) => {
         const recipe = editedRecipes.find(recipe => recipe.id === id);
         try{

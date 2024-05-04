@@ -110,6 +110,7 @@ export const resetPassword = async (email) => {
     })
 }
 
+// Delete user authentication and data
 export const removeUser = async () => {
     await deleteUserDocument();
     await deleteUser(auth.currentUser)
@@ -144,10 +145,13 @@ export const removeUser = async () => {
 //     }
 // }
 
+// Delete user document and all subcollections
 const deleteUserDocument = async () => {
 
     const userDocRef = doc(db, USERS_REF, auth.currentUser.uid);
     const subcollections = ['favorites', 'recipes',];
+
+    // Create a write batch to delete all subcollections
     const batch = writeBatch(db);
 
     for (const subcollection of subcollections) {
@@ -169,6 +173,7 @@ const deleteUserDocument = async () => {
 
     batch.delete(userDocRef);
 
+    // Commit the batch to delete all subcollections
     await batch.commit()
         .then(() => {
             console.log('User document and all subcollections deleted successfully!');
